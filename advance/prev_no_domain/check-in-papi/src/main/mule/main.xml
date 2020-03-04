@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd">
+	<flow name="check-in-by-pnr" doc:id="d4c92a55-4d87-4649-9bd2-3a6df70f375f">
+		<json-logger:logger doc:name="Logger" doc:id="7b2b021c-b970-4db3-994c-0fa38730bb8f" config-ref="jlogConfig" message="Checking-in by PNR">
+			<json-logger:content><![CDATA[#[output application/json ---
+{
+	pnr: vars.PNR,
+ 	payload: payload,
+ 	attributes: attributes
+}]]]></json-logger:content>
+		</json-logger:logger>
+		<ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  paymentID: "PAY-1AKD7482FAB9STATKO"
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+		<json-logger:logger doc:name="Logger" doc:id="bfe15e43-2fef-4a07-a0f0-260424de734e" tracePoint="END" message="Checking-in by PNR" config-ref="jlogConfig" />
+	</flow>
+	<flow name="payment-approvalby-pnr" doc:id="17d6d5e9-cc17-4868-a9d5-ab9cb13cab9f" >
+		<json-logger:logger doc:name="Logger" doc:id="b60fbf50-a178-43e1-a297-fc8b568e835e" config-ref="jlogConfig" message="Approving payment by PNR">
+			<json-logger:content ><![CDATA[#[output application/json ---
+{
+	pnr: vars.PNR, 
+ 	payload: payload,
+ 	attributes: attributes
+}]]]></json-logger:content>
+		</json-logger:logger>
+		<ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  flight: "ANY6584",
+  lastName: "Smith",
+  gate: "4A",
+  PNR: "928382J",
+  flightDate: "2019-02-14",
+  boarding: "13:15:00",
+  seat: "16C",
+  depart: "14:30:00",
+  class: "Economy",
+  airportArrive: "SFO",
+  airportDepart: "ATL",
+  bagsCount: 2
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+		<json-logger:logger doc:name="Logger" doc:id="f36120ef-43df-47b2-9edb-4e4f30774b0f" config-ref="jlogConfig" message="Approving payment by PNR" tracePoint="END">
+		</json-logger:logger>
+	</flow>
+</mule>

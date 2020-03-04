@@ -1,0 +1,4 @@
+tls.keystore:
+  type:        "pkcs12"
+  path:        "certs/system-domain.p12"
+  alias:       "server"

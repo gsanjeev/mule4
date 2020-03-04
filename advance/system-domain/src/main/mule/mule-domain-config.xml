@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<domain:mule-domain
+xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties"
+	xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
+	xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
+	        xmlns:http="http://www.mulesoft.org/schema/mule/http"
+        xmlns="http://www.mulesoft.org/schema/mule/core"
+        xmlns:domain="http://www.mulesoft.org/schema/mule/ee/domain"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
+               http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+               http://www.mulesoft.org/schema/mule/ee/domain http://www.mulesoft.org/schema/mule/ee/domain/current/mule-domain-ee.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd">
+
+    <!-- configure here resource to be shared within the domain -->
+   	<global-property doc:name="Global Property" doc:id="e117b08d-3ca6-4f98-ac64-78025aef2ec5" name="env" value="dev" />
+   	<configuration-properties doc:name="Configuration properties" doc:id="c074f95d-4833-4103-b2f4-44563e37557a" file="domain-properties.yaml" />
+   	<configuration-properties doc:name="Configuration properties" doc:id="35fd6dc5-b5ad-4894-b147-d2893009e435" file="${env}-domain-properties.yaml" />
+   	<secure-properties:config name="secureEnvPropsConfigDomain" doc:name="Secure Properties Config" doc:id="c7c55204-f961-4e56-9b2f-a48a1a336c97" file="${env}-domain-secure-properties.yaml" key="${encrypt.key}" >
+		<secure-properties:encrypt algorithm="Blowfish" />
+	</secure-properties:config>
+    <http:listener-config name="apiHttpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="${api.port}" protocol="HTTPS" tlsContext="apiTLSContext"/>
+    </http:listener-config>
+    <tls:context name="apiTLSContext" doc:name="TLS Context" doc:id="76db615a-2807-41f8-bf92-2fcb17b4a6af" >
+		<tls:key-store type="${tls.keystore.type}" path="${tls.keystore.path}" alias="${tls.keystore.alias}" keyPassword="${secure::tls.keystore.password}" password="${secure::tls.keystore.keyPassword}"  />
+	</tls:context>
+
+
+
+</domain:mule-domain>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit" xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="main-test-suite.xml" />
+	<munit:test name="main-test-suite-check-in-by-pnrTest" doc:id="af33f80e-0fab-4e50-9dd0-967ed1813738" description="Test">
+        <munit:behavior>
+            <munit:set-event doc:name="Set PNR and payload">
+                <munit:payload value="#[output application/json --- read(MunitTools::getResourceAsString('json/check-in-by-pnr-request.json'), 'application/json')]"/>
+                <munit:variables>
+                    <munit:variable key="PNR" value="N123"/>
+                </munit:variables>
+            </munit:set-event>
+        </munit:behavior>
+        <munit:execution>
+            <flow-ref name="check-in-by-pnr" doc:name="check-in-by-pnr"/>
+        </munit:execution>
+        <munit:validation>
+            <munit-tools:assert-that expression="#[payload]" is="#[MunitTools::equalTo({paymentID: 'PAY-1AKD7482FAB9STATKO'})]" doc:name="Payload has result"/>
+        </munit:validation>
+	</munit:test>
+	<munit:test name="main-test-suite-payment-approvalby-pnrTest" doc:id="9e3cac84-40fa-44c1-85a3-d6c45ba8689f" description="Test">
+		<munit:execution >
+			<flow-ref doc:name="Flow-ref to payment-approvalby-pnr" doc:id="6b32011a-b77c-4faa-b9b4-1cfc4be4fc5b" name="payment-approvalby-pnr"/>
+		</munit:execution>
+	</munit:test>
+
+
+</mule>
