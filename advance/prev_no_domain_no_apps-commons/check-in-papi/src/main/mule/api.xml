@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="check-in-papi-main">
+        <http:listener config-ref="httpListenerConfig" path="/api/${api.majorVersion}/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:router config-ref="apiConfig" />
+ 		<error-handler ref="api-error-handler"/>
+    </flow>
+    <flow name="check-in-papi-console">
+        <http:listener config-ref="httpListenerConfig" path="/console/${api.majorVersion}/*">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="apiConfig" />
+        <error-handler ref="api-console-error-handler"/>
+    </flow>
+    <flow name="put:\tickets\(PNR)\checkin:application\json:apiConfig">
+		<ee:transform doc:name="Transform Message" doc:id="10e29a52-34bc-470a-b731-3c33985cadd2" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="PNR" ><![CDATA[attributes.uriParams.'PNR']]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="Flow Reference" doc:id="5854cfe5-d1c0-43dd-85e3-32cd5321d55b" name="check-in-by-pnr" />
+    </flow>
+    <flow name="put:\tickets\(PNR)\paymentApproval:application\json:apiConfig">
+		<ee:transform doc:name="Transform Message" doc:id="deafc247-d495-474a-8f56-b2b0ad0bc52d" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="PNR" ><![CDATA[attributes.uriParams.'PNR']]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<flow-ref doc:name="Flow Reference" doc:id="972bf683-008f-4487-b4f6-f1ee319d64ef" name="payment-approvalby-pnr" />
+    </flow>
+</mule>

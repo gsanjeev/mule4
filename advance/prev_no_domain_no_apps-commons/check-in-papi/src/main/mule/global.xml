@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:json-logger="http://www.mulesoft.org/schema/mule/json-logger" xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:tls="http://www.mulesoft.org/schema/mule/tls" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd
+http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd
+http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd">
+    <global-property doc:name="Global Property" doc:id="f6d698d5-f808-46e2-98fd-8f00850b607f" name="env" value="dev" />
+    <configuration-properties doc:name="Configuration properties" doc:id="d3080dfd-3050-4e6e-a16f-fed91e63fc18" file="${env}-properties.yaml" />
+	<configuration-properties doc:name="Configuration properties" doc:id="b9b540e7-9adf-4cd2-ac54-127019eb3f1f" file="properties.yaml" />
+    <http:listener-config name="httpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="${api.port}" protocol="HTTPS" tlsContext="apiTLSContext"/>
+    </http:listener-config>
+    <apikit:config name="apiConfig" api="${api.spec}" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <tls:context name="apiTLSContext" doc:name="TLS Context" doc:id="963fe792-a7dd-4efa-8ffd-ce37d9667f80" >
+		<tls:key-store type="${tls.keystore.type}" path="${tls.keystore.path}" alias="${tls.keystore.alias}" keyPassword="${secure::tls.keystore.password}" password="${secure::tls.keystore.keyPassword}"  />
+	</tls:context>
+	<api-gateway:autodiscovery apiId="${api.id}" doc:name="API Autodiscovery" doc:id="98f24eab-955e-4b10-ba0f-69051f6222da" flowRef="check-in-papi-main" />
+	<secure-properties:config name="secureEnvPropsConfig" doc:name="Secure Properties Config" doc:id="98934a84-6540-4fd6-8603-3377fab38f21" file="${env}-secure-properties.yaml" key="${encrypt.key}" >
+		<secure-properties:encrypt algorithm="Blowfish" />
+	</secure-properties:config>
+	<json-logger:config name="jlogConfig" doc:name="JSON Logger Config" doc:id="dbfb954e-b17d-4309-877b-fecd2621d792" applicationName="${app.name}" applicationVersion="${app.version}" environment="${env}" prettyPrint="${logger.prettyPrint}" />
+</mule>
