@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:oauth2-provider="http://www.mulesoft.org/schema/mule/oauth2-provider" xmlns:oauth="http://www.mulesoft.org/schema/mule/oauth"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/oauth http://www.mulesoft.org/schema/mule/oauth/current/mule-oauth.xsd
+http://www.mulesoft.org/schema/mule/oauth2-provider http://www.mulesoft.org/schema/mule/oauth2-provider/current/mule-oauth2-provider.xsd">
+	<oauth2-provider:config name="OAuth2_Provider_Config" doc:name="OAuth2 Provider Config" 
+	doc:id="0b74c1d4-acbd-4f8f-a15c-e7654fedfaa5" listenerConfig="HTTP_Listener_config" 
+	clientStore="clientObjectStore" resourceOwnerSecurityProvider="resourceOwnerSecurityProvider" 
+	clientSecurityProvider="clientSecurityProvider" supportedGrantTypes="${oauth2.supportedgranttypes.all}"
+	scopes="${oauth2.scopes.all}" defaultScopes="${oauth2.scopes.default}" 
+	providerName="OAuth2_Laxtech_Provider">
+		<oauth2-provider:token-config path="${oauth2.token.path}" tokenStore="tokenObjectStore" 
+		tokenTtl="${oauth2.token.ttl}" >
+			<oauth2-provider:refresh-token-strategy >
+				<oauth2-provider:single-refresh-token objectStore="refreshTokenObjectStore" />
+			</oauth2-provider:refresh-token-strategy>
+		</oauth2-provider:token-config>
+		<oauth2-provider:authorization-config authorizationCodeStore="authorizationCodeObjectStore" />
+		<oauth2-provider:clients >
+			<oauth2-provider:client clientId="b5cde8e18f954e63975ef3b9f2df9177" clientName="CLIENT" description="mobile client" secret="***************************" type="CONFIDENTIAL">
+				<oauth2-provider:client-redirect-uris>
+					<oauth2-provider:client-redirect-uri
+						value="https://localhost:8082/callback" />
+				</oauth2-provider:client-redirect-uris>
+				<oauth2-provider:client-authorized-grant-types >
+					<oauth2-provider:client-authorized-grant-type value="AUTHORIZATION_CODE" />
+					<oauth2-provider:client-authorized-grant-type value="CLIENT_CREDENTIALS" />
+				</oauth2-provider:client-authorized-grant-types>
+				<oauth2-provider:client-scopes>
+					<oauth2-provider:client-scope value="${oauth.scopes.default}" />
+				</oauth2-provider:client-scopes>
+			</oauth2-provider:client>
+		</oauth2-provider:clients>
+	</oauth2-provider:config>
+	<flow name="oauth2-providerFlow" doc:id="48570cf5-90b2-43cc-b304-ebb5f2ed9a75" >
+		<http:listener doc:name="Listener" doc:id="392bf290-c045-479c-a525-9d9414b0aadf" config-ref="HTTP_Listener_config" path="${uri.path}"/>
+		<logger level="INFO" doc:name="Logger" doc:id="a040fabd-2f19-4403-b7bf-142e050364f2" message='Input Payload ::   #[write(message, "application/json") replace "\n" with "\n"]'/>
+		<oauth2-provider:validate-token doc:name="Validate token" doc:id="74b1c656-8c40-4879-b01a-547589bce6bc" config-ref="OAuth2_Provider_Config"/>
+		<logger level="INFO" doc:name="Logger" doc:id="b4135ce2-c716-4df0-a10e-27630302b54a" message="output payload :: #[payload]"/>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="cdab6db8-7404-4114-8fbb-f67c6f158dc6" type="OAUTH2-PROVIDER:TOKEN_UNAUTHORIZED" >
+				<set-payload value="UNAUTHORIZED_TOKEN" doc:name="Set Payload" doc:id="36ad6506-8419-4e7c-84a0-a03f2f9c8cfe" />
+			</on-error-continue>
+		</error-handler>
+	</flow>	
+	
+	</mule>

@@ -1,0 +1,20 @@
+http:
+  host: "0.0.0.0"
+  port: "8081"
+
+uri:
+  path: "/validate" 
+
+oauth2:
+  token:
+    ttl: "3600"
+    path: "/access-token"
+  supportedgranttypes:
+    all: "AUTHORIZATION_CODE,IMPLICIT,RESOURCE_OWNER_PASSWORD_CREDENTIALS,CLIENT_CREDENTIALS"
+  scopes: 
+    all: "READ, WRITE"
+    default: "READ"
+    
+  
+    
+    
