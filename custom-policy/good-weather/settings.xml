@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 http://maven.apache.org/xsd/settings-1.0.0.xsd">
+
+  <servers>
+    <server>    
+      <id>exchange-server</id>    
+      <username>sanjeev20</username>    
+      <password>************</password>    
+    </server>
+    
+    <server>
+      <id>releases-ee</id>
+      <username>muletraining.nexus</username>
+      <password>***********</password>
+    </server>
+  </servers>
+  
+  <pluginGroups>
+      <pluginGroup>org.mule.tools</pluginGroup>     
+  </pluginGroups>
+  
+  <profiles>
+   <profile>
+     <id>archetype-repository</id>
+        <activation>
+            <activeByDefault>true</activeByDefault>
+        </activation>
+     <repositories>
+        <repository>
+            <id>releases-ee</id>
+            <name>Mule EE Repository</name>
+            <url>https://repository.mulesoft.org/nexus-ee/content/repositories/releases-ee/</url>
+            <layout>default</layout>
+        </repository>
+       <repository>
+         <id>archetype</id>
+         <name>Mule Repository</name>
+         <url>https://repository-master.mulesoft.org/nexus/content/repositories/public</url>
+         <releases>
+           <enabled>true</enabled>
+           <checksumPolicy>fail</checksumPolicy>
+         </releases>
+         <snapshots>
+           <enabled>true</enabled>
+           <checksumPolicy>warn</checksumPolicy>
+         </snapshots>
+       </repository>
+     <repository>
+         <id>mulesoft-releases</id>
+         <name>MuleSoft Repository</name>
+         <url>http://repository.mulesoft.org/releases/</url>
+         <layout>default</layout>
+     </repository>
+     <repository>
+         <id>mulesoft-snapshots</id>
+         <name>MuleSoft Snapshot Repository</name>
+         <url>http://repository.mulesoft.org/snapshots/</url>
+         <layout>default</layout>
+    </repository>
+        <repository>
+            <id>mulesoft-public</id>
+            <name>MuleSoft Public Repository</name>
+            <url>https://repository.mulesoft.org/nexus/content/repositories/public/</url>
+            <layout>default</layout>
+    </repository>
+
+    </repositories> 
+    
+   </profile>
+  </profiles>
+ 
+</settings>

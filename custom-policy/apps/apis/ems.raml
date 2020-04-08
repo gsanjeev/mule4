@@ -1,0 +1,12 @@
+#%RAML 1.0
+baseUri: https://anypoint.mulesoft.com/mocking/api/v1/links/fd3ef1ed-7267-410c-8046-d35d5ca7379d/ # 
+title: EMS
+description: Employee Management System
+/employees:
+  get:
+    responses:
+      200:
+        body:
+          application/json:
+            example: [{ "id": "100", "name": "David"}, {"id": "200", "name": "Mark"}]
+              

@@ -1,0 +1,63 @@
+id: Custom Demo Response
+name: Custom Domo Response
+description: Demo Modifies the payload and/or the status code when some condition is met.
+category: Custom
+type: custom
+resourceLevelSupported: true
+encryptionSupported: false
+standalone: true
+requiredCharacteristics: []
+providedCharacteristics: []
+configuration:
+  - propertyName: evaluateInRequest
+    name: Evaluate in the request
+    description: If the condition should be evaluated in the request.
+    type: boolean
+    optional: true
+    defaultValue: false
+  - propertyName: requestCondition
+    name: Request Condition
+    description: Dataweave expression that will be evaluated to define if the request should be modified.
+    type: expression
+    optional: true
+    sensitive: false
+    allowMultiple: false
+    dependsOnKey: evaluateInRequest
+    dependsOnValue: true
+  - propertyName: evaluateInResponse
+    name: Evaluate in the response
+    description: If the condition should be evaluated in the response.
+    type: boolean
+    optional: true
+    defaultValue: false
+  - propertyName: responseCondition
+    name: Response Condition
+    description: Dataweave expression that will be evaluated to define if the request should be modified.
+    type: expression
+    optional: true
+    sensitive: false
+    allowMultiple: false
+    dependsOnKey: evaluateInResponse
+    dependsOnValue: true
+  - propertyName: mergeBothConditions
+    name: Merge both conditions
+    description: Check if both request and response conditions need to be met.
+    type: boolean
+    optional: true
+    defaultValue: false
+  - propertyName: statusCode
+    name: Status Code
+    type: int
+    minimumValue: 0
+    maximumValue: 999
+    description: Status code to return when the condition is met.
+    optional: true
+    sensitive: false
+    allowMultiple: false
+  - propertyName: payload
+    name: Payload
+    type: expression
+    description: Expression that sets the payload to return when the condition is met.
+    optional: true
+    sensitive: false
+    allowMultiple: false
