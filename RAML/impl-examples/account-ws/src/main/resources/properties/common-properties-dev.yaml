@@ -1,0 +1,10 @@
+http:
+  host: "localhost"
+  port: "8081"
+  
+db:
+  host: "mudb.learn.mulesoft.com"
+  port: "3306"
+  name: "training"
+  user: "mule"
+  password: "mule"

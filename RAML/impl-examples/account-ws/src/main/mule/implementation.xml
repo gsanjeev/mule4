@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="getAccountFlow" doc:id="468776a8-ff11-488c-8eaf-353649442430" >
+		<db:select doc:name="Select" doc:id="84432aa2-b6f1-4e8b-89e6-6f28a2e89719" config-ref="Database_Config">
+			<db:sql ><![CDATA[SELECT * FROM flights_customers]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="5cb04fde-d24e-44a0-afbd-f816a4d43a1e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map ( payload01 , indexOfPayload01 ) -> {
+	id: payload01.accountID as Number default 0,
+	firstName: payload01.name default "",
+	address: ((payload01.street default "") ++ (payload01.city default "")) ++ (payload01.state default ""),
+	postal: payload01.postal as Number default 0,
+	country: payload01.country default "",
+	miles: payload01.miles default 0,
+	createDate: payload01.creationDate as String default "",
+	"type": payload01.accountType default ""
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="createAccountFlow" doc:id="7a230a2e-dfdc-4b83-bdfa-31e470582d35" >
+		<ee:transform doc:name="Transform Message" doc:id="9e012e67-2c4b-4f03-93be-2e364def3ccc" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+  message: "Account created (but not really)"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

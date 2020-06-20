@@ -1,0 +1,65 @@
+#%RAML 1.0
+baseUri: https://anypoint.mulesoft.com/mocking/api/v1/links/b4dbe97f-b6a8-4f4d-b123-4b1c3d35f928/ # 
+title: Accounts API
+
+types:
+  Account: !include types/AccountDataType.raml
+
+traits:
+  secure: !include traits/secure.raml
+
+/accounts:
+  is:
+    - secure: 
+  get:
+    description: Retrieve accounts.
+    queryParameters:
+      type: 
+        displayName: Account type
+        description: Account type
+        required: true
+        type: string
+        enum:
+          - personal
+          - business
+      name:
+        displayName: Name
+        description: Name of account owner
+        required: false
+        type: string
+      country:
+        displayName: Country
+        description: Country of account owner
+        required: false
+        type: string
+    responses:
+      200:
+        body:
+          application/json:
+            type: Account[]
+            examples:
+              output: !include examples/AccountsExample.raml
+      400:
+        body:
+          application/json:
+            example:
+              error: Error occured whire retrieving accounts.
+  post:
+    description: Create new account.
+    body:
+      application/json:
+        type: Account
+        examples:
+          input: !include examples/AccountNoIdExample.raml
+    responses:
+      201:
+        body:
+          application/json:
+            example:
+              message: Account created (but not really)
+      400:
+        body:
+          application/json:
+            example:
+              error: Error occured while creating account.
+            
