@@ -6,9 +6,51 @@
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
 	<flow name="getAccountFlow" doc:id="468776a8-ff11-488c-8eaf-353649442430" >
-		<db:select doc:name="Select" doc:id="84432aa2-b6f1-4e8b-89e6-6f28a2e89719" config-ref="Database_Config">
-			<db:sql ><![CDATA[SELECT * FROM flights_customers]]></db:sql>
+		<set-variable value="#[attributes.queryParams.'type']" doc:name="Set Variable acc_type" doc:id="e4c93bab-f184-4772-9fe0-777f88303c9f" variableName="acc_type" />
+		<set-variable value="#[attributes.queryParams.country]" doc:name="Set Variable country" doc:id="c6e05e83-e5ae-4b4f-ace3-7eaac25ad3c0" variableName="country"/>
+		<set-variable value="#[attributes.queryParams.name]" doc:name="Set Variable name" doc:id="13abef3b-a703-4916-b845-5506f7ddf85f" variableName="name"/>
+		<choice doc:name="Choice" doc:id="3b84fc98-a335-4473-8a5a-1b1737c2ccbc" >
+			<when expression="#[vars.country == null]">
+				<choice doc:name="Choice" doc:id="99201803-5751-46e9-a979-7da2295a8f4d" >
+					<when expression="#[vars.name == null]">
+						<db:select doc:name="Select" doc:id="84432aa2-b6f1-4e8b-89e6-6f28a2e89719" config-ref="Database_Config">
+			<db:sql><![CDATA[SELECT * FROM flights_customers
+WHERE accountType = :acc_type]]></db:sql>
+			<db:input-parameters><![CDATA[#[{'acc_type' : vars.acc_type}]]]></db:input-parameters>
 		</db:select>
+					</when>
+					<otherwise >
+						<db:select doc:name="Select with name" doc:id="9b996c06-388d-48fc-b34e-ec00ae44172b" config-ref="Database_Config" >
+							<db:sql ><![CDATA[SELECT * FROM flights_customers
+WHERE accountType = :acc_type 
+AND name LIKE (CONCAT('%',:name,'%'))]]></db:sql>
+							<db:input-parameters ><![CDATA[#[{'acc_type' : vars.acc_type, 'name' : vars.name}]]]></db:input-parameters>
+						</db:select>
+					</otherwise>
+				</choice>
+			</when>
+			<otherwise >
+				<choice doc:name="Choice" doc:id="dbcde6cb-fc09-4826-8c2b-038e451aca8a" >
+					<when expression="vars.name == null">
+						<db:select doc:name="Select with country" doc:id="10a645ea-f9e2-483e-87f5-943970d9c45a" config-ref="Database_Config" >
+							<db:sql ><![CDATA[SELECT * FROM flights_customers
+WHERE accountType = :acc_type 
+AND country = :country]]></db:sql>
+							<db:input-parameters ><![CDATA[#[{'acc_type' : vars.acc_type, 'country' : vars.country}]]]></db:input-parameters>
+						</db:select>
+					</when>
+					<otherwise >
+						<db:select doc:name="Select with name and country" doc:id="dcb217b8-f7ec-414c-bc2f-2301913ca0d3" config-ref="Database_Config" >
+							<db:sql ><![CDATA[SELECT * FROM flights_customers
+WHERE accountType = :acc_type 
+AND name LIKE (CONCAT('%',:name,'%'))
+AND country = :country]]></db:sql>
+							<db:input-parameters ><![CDATA[#[{'acc_type' : vars.acc_type, 'name' : vars.name, 'country' : vars.country}]]]></db:input-parameters>
+						</db:select>
+					</otherwise>
+				</choice>
+			</otherwise>
+		</choice>
 		<ee:transform doc:name="Transform Message" doc:id="5cb04fde-d24e-44a0-afbd-f816a4d43a1e" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
@@ -16,7 +58,8 @@ output application/json
 ---
 payload map ( payload01 , indexOfPayload01 ) -> {
 	id: payload01.accountID as Number default 0,
-	firstName: payload01.name default "",
+	firstName: (payload01.name default "" splitBy(/\s/))[0],
+	lastName: (payload01.name default "" splitBy(/\s/))[1],
 	address: ((payload01.street default "") ++ (payload01.city default "")) ++ (payload01.state default ""),
 	postal: payload01.postal as Number default 0,
 	country: payload01.country default "",
