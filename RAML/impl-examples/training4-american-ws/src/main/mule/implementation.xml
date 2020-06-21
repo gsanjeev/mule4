@@ -13,10 +13,22 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 		<db:my-sql-connection host="mudb.learn.mulesoft.com" port="3306" user="mule" password="mule" database="training" />
 	</db:config>
 	<flow name="getFlights" doc:id="0254d536-4dcd-48bf-aa0c-78eae6d3d21b" >
-		<db:select doc:name="Select" doc:id="3cc7d084-ea6b-4cdd-8f14-99fbc9f64c20" config-ref="Database_Config">
-			<db:sql ><![CDATA[SELECT * 
+		<choice doc:name="Choice" doc:id="9eac38b5-330c-4b49-bc8f-20dc449cd3f3" >
+			<when expression="#[attributes.queryParams.'destination' == null]">
+				<db:select doc:name="Select" doc:id="3cc7d084-ea6b-4cdd-8f14-99fbc9f64c20" config-ref="Database_Config">
+			<db:sql><![CDATA[SELECT * 
 FROM american]]></db:sql>
 		</db:select>
+			</when>
+			<otherwise >
+				<db:select doc:name="Select with destination" doc:id="81d43063-f15d-41d8-ab49-562cd82bdb9b" config-ref="Database_Config" >
+					<db:sql ><![CDATA[SELECT * 
+FROM american
+WHERE toAirport = :destination]]></db:sql>
+					<db:input-parameters ><![CDATA[#[{'destination' : attributes.queryParams.'destination'}]]]></db:input-parameters>
+				</db:select>
+			</otherwise>
+		</choice>
 		<ee:transform doc:name="Transform Message" doc:id="77367d33-6a83-402e-aaff-c2d50aa00256" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
