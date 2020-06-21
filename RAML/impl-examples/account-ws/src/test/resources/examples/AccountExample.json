@@ -1,0 +1,11 @@
+{
+    "id": 1,
+    "firstName": "William",
+    "lastName": "Wang",
+    "address": "Dali city",
+    "postal": 45308,
+    "country": "USA",
+    "miles": 200000,
+    "createDate": "2016-02-28T16:41:41.090Z",
+    "type": "personal"
+}

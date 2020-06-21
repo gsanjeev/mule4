@@ -62,4 +62,81 @@ traits:
           application/json:
             example:
               error: Error occured while creating account.
-            
+  /{ID}:
+    get:
+      description: Get Accout for ID.
+      queryParameters:
+        type: 
+          displayName: Account type
+          description: Account type
+          required: false
+          type: string
+          enum:
+            - personal
+            - business
+      responses:
+        200:
+          body:
+            application/json:
+              type: Account
+              examples:
+                output: !include examples/AccountExample.raml
+        400:
+          body:
+            application/json:
+              example:
+                error: Error occured whire retrieving accounts.       
+    put:
+      description: Update Account for ID.
+      body:
+        application/json:
+          type: Account
+          examples:
+            input: !include examples/AccountExample.raml
+      responses:
+        200:
+          body:
+            application/json:
+              example:
+                message: Account replaced (but not really)
+        400:
+          body:
+            application/json:
+              example:
+                error: Error occured while replacing account. 
+    patch:
+      description: Update Account for ID.
+      body:
+        application/json:
+            type: Account
+            examples:
+              input: !include examples/AccountExample.raml
+      responses:
+        200:
+          body:
+            application/json:
+              example:
+                message: Account modified (but not really)
+        400:
+          body:
+            application/json:
+              example:
+                error: Error occured while modifing account. 
+    delete:
+      description: Update Account for ID.
+      body:
+        application/json:
+          type: Account
+          examples:
+            input: !include examples/AccountExample.raml
+      responses:
+        201:
+          body:
+            application/json:
+              example:
+                message: Account deleted (but not really)
+        400:
+          body:
+            application/json:
+              example:
+                error: Error occured while deleting account. 

@@ -82,4 +82,54 @@ output application/json
 			</ee:message>
 		</ee:transform>
 	</flow>
+	<flow name="getAccountByIdFlow" doc:id="b72ab234-fdd9-42bd-8f6f-e6d1cd3d2b2c" >
+		<db:select doc:name="Select Account By Id" doc:id="fbf0d216-4986-4672-bd84-42b96494cb9e" config-ref="Database_Config">
+			<db:sql ><![CDATA[SELECT * FROM flights_customers
+WHERE accountID = :ID]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{'ID': attributes.uriParams.'ID'}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="2b1f48eb-3ab2-4a0b-9e04-30e012ca6f48" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	id: payload[0].accountID as Number default 0,
+	firstName: (payload[0].name default "" splitBy(/\s/))[0],
+	lastName: (payload[0].name default "" splitBy(/\s/))[1],
+	address: ((payload[0].street default "") ++ (payload[0].city default "")) ++ (payload[0].state default ""),
+	postal: payload[0].postal as Number default 0,
+	country: payload[0].country default "",
+	miles: payload[0].miles default 0,
+	createDate: payload[0].creationDate as String default "",
+	"type": payload[0].accountType default ""
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="getAccountByAccountIdFlow" doc:id="718aa0c0-df49-4e0c-ae03-7438a1c657a8" >
+		<db:select doc:name="Select" doc:id="74c8bf91-947f-49fc-8d2c-883130c7d35f" config-ref="Database_Config">
+			<db:sql ><![CDATA[SELECT * FROM flights_customers
+WHERE accountID = :ID]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{'ID': attributes.uriParams.'ID'}]]]></db:input-parameters>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="8ee40129-180e-4d49-bcda-623dab0348e4" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+(payload map (( payload01 , indexOfPayload01 ) -> {
+	id: payload01.accountID as Number default 0,
+	firstName: payload01.name default "",
+	lastName: payload01.name default "",
+	address: ((payload01.street default "") ++ (payload01.city default "")) ++ (payload01.state default ""),
+	postal: payload01.postal as Number default 0,
+	country: payload01.country default "",
+	miles: payload01.miles default 0,
+	createDate: payload01.creationDate as String default "",
+	"type": payload01.accountType default ""
+}))[0]]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
 </mule>
