@@ -6,11 +6,11 @@ types:
   Account: !include types/AccountDataType.raml
 
 traits:
-  secure: !include traits/secure.raml
+  client-id-required: !include traits/secure.raml
 
 /accounts:
   is:
-    - secure: 
+    - client-id-required:
   get:
     description: Retrieve accounts.
     queryParameters:
@@ -63,6 +63,8 @@ traits:
             example:
               error: Error occured while creating account.
   /{ID}:
+    is:
+      client-id-required:
     get:
       description: Get Accout for ID.
       queryParameters:

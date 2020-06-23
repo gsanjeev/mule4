@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="230fb243-7f4d-4c17-9ef4-dfe5d6c605ae" >
+		<http:listener-connection host="${http.host}" port="${http.port}" />
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="a98233eb-b484-465d-94e7-82ab07f1c31c">
+		<http:request-connection host="${account_srvc.host}"/>
+	</http:request-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="854da306-7ded-40d6-8c81-ceec2788fd9f" file="properties\common-properties-${env}.yaml" />
+	<global-property doc:name="Global Property" doc:id="d028d7d7-ab63-4900-bad9-32322741c273" name="env" value="dev" />
+</mule>

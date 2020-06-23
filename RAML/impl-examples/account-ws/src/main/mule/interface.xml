@@ -177,6 +177,6 @@ output application/json
         </ee:transform>
     </flow>
     <flow name="get:\accounts\(ID):accounts-api-config">
-		<flow-ref doc:name="getAccountByIdFlow" doc:id="49e429c2-6db5-4c1a-8742-3f6dfeee7555" name="getAccountByAccountIdFlow"/>
+        <flow-ref doc:name="getAccountByIdFlow" doc:id="49e429c2-6db5-4c1a-8742-3f6dfeee7555" name="getAccountByAccountIdFlow" />
     </flow>
 </mule>

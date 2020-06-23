@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+
+	<flow name="account-ws-clientFlow" doc:id="a00bcba3-d4e9-463a-8cae-7d61ca47ec6c" >
+		<http:listener doc:name="Listener" doc:id="cc1f7c02-292f-4efc-be57-6a2d8f81bfa7" config-ref="HTTP_Listener_config" path="/bank"/>
+		<set-variable value="#[attributes.queryParams.'type']" doc:name="Set Account Type Variable" doc:id="2630de65-5e18-4793-9564-d7ee9185766d" variableName="accountType"/>
+		<set-variable value="${account_srvc.client_id}" doc:name="Set client_id Variable" doc:id="8e2f9f64-88ab-4f61-b348-6f46709e7b36" variableName="client_id"/>
+		<set-variable value="${account_srvc.client_secret}" doc:name="Set client_secret Variable" doc:id="d8eb4798-679a-44d0-9070-82cb05a55f9a" variableName="client_secret"/>
+		<logger level="INFO" doc:name="Logger" doc:id="7fe3b398-5ab2-4d0d-8e9b-33235c8b008e" message="#[vars.accountType]"/>
+		<logger level="INFO" doc:name="Logger" doc:id="406090db-e951-49e4-a5b6-fab0e10231e3" message="#[vars.client_id]"/>
+		<logger level="INFO" doc:name="Logger" doc:id="605c574b-f4d7-4d01-af61-956cf95c65d9" message="#[vars.client_secret]"/>
+		<http:request method="GET" doc:name="Get Accounts Request" doc:id="ae5aa3b3-42c2-4497-a3ae-7bd384104d0b" config-ref="HTTP_Request_configuration" path="/accounts">
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	client_secret : vars.client_secret,
+	client_id : vars.client_id
+}]]]></http:headers>
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+	"country" : attributes.queryParams.'country',
+	"name" : attributes.queryParams.'name',
+	"type" : vars.accountType
+}]]]></http:query-params>
+		</http:request>
+	</flow>
+</mule>
