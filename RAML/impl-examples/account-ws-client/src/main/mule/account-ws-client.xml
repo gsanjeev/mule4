@@ -5,7 +5,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
 
-	<flow name="account-ws-clientFlow" doc:id="a00bcba3-d4e9-463a-8cae-7d61ca47ec6c" >
+	<flow name="getAccountsFlow" doc:id="a00bcba3-d4e9-463a-8cae-7d61ca47ec6c" >
 		<http:listener doc:name="Listener" doc:id="cc1f7c02-292f-4efc-be57-6a2d8f81bfa7" config-ref="HTTP_Listener_config" path="/bank"/>
 		<set-variable value="#[attributes.queryParams.'type']" doc:name="Set Account Type Variable" doc:id="2630de65-5e18-4793-9564-d7ee9185766d" variableName="accountType"/>
 		<set-variable value="${account_srvc.client_id}" doc:name="Set client_id Variable" doc:id="8e2f9f64-88ab-4f61-b348-6f46709e7b36" variableName="client_id"/>
@@ -27,6 +27,22 @@ http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/htt
 	"name" : attributes.queryParams.'name',
 	"type" : vars.accountType
 }]]]></http:query-params>
+		</http:request>
+	</flow>
+	<flow name="account-ws-clientFlow" doc:id="1a8feb60-d373-4c0f-b7c2-0b4b383939e8" >
+		<http:listener doc:name="Listener" doc:id="748f1636-e82a-4847-914b-ef43aacc2221" config-ref="HTTP_Listener_config" path="/bank/{ID}"/>
+		<http:request method="GET" doc:name="Request" doc:id="0d66425e-6ae9-4c33-971a-728d071ed490" config-ref="HTTP_Request_configuration" path="/accounts/{ID}">
+			<http:headers><![CDATA[#[output application/java
+---
+{
+	client_secret : "${account_srvc.client_secret}",
+	client_id : "${account_srvc.client_id}"
+}]]]></http:headers>
+			<http:uri-params><![CDATA[#[output application/java
+---
+{
+	ID : attributes.uriParams.'ID'
+}]]]></http:uri-params>
 		</http:request>
 	</flow>
 </mule>
