@@ -1,0 +1,7 @@
+http:
+  port: "8081"
+  
+sfdc:
+  username: "sanjeevtripathi@gmail.com"
+  password: "kamal123"
+  token: "HupRyy7Oo1GrIW1a5A6pzoDN"

@@ -5,26 +5,32 @@
 	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
-	<flow name="getAccountFlow" doc:id="468776a8-ff11-488c-8eaf-353649442430" >
-		<set-variable value="#[attributes.queryParams.'type']" doc:name="Set Variable acc_type" doc:id="e4c93bab-f184-4772-9fe0-777f88303c9f" variableName="acc_type" />
-		<set-variable value="#[attributes.queryParams.country]" doc:name="Set Variable country" doc:id="c6e05e83-e5ae-4b4f-ace3-7eaac25ad3c0" variableName="country"/>
-		<set-variable value="#[attributes.queryParams.name]" doc:name="Set Variable name" doc:id="13abef3b-a703-4916-b845-5506f7ddf85f" variableName="name"/>
+	<flow name="getAccountsFlow" doc:id="468776a8-ff11-488c-8eaf-353649442430" >
+		<logger level="INFO" doc:name="Logger" doc:id="bb144a3b-ba52-41e1-b24a-fd4b8c4225b2" message="getAccountsFlow started"/>
+		<set-variable value="#[attributes.queryParams.'type']" doc:name="Set Variable acccountType" doc:id="e4c93bab-f184-4772-9fe0-777f88303c9f" variableName="accountType" />
+		<logger level="INFO" doc:name="Logger" doc:id="6a99fe51-2e13-4077-9379-005ad50d5e8e" message="#[vars.accountType]"/>
+		<set-variable value="#[attributes.queryParams.'country']" doc:name="Set Variable country" doc:id="c6e05e83-e5ae-4b4f-ace3-7eaac25ad3c0" variableName="country"/>
+		<logger level="INFO" doc:name="Logger" doc:id="bc76d246-6bb4-4776-8dce-2052f0541416" message="#[vars.country]" />
+		<set-variable value="#[attributes.queryParams.'name']" doc:name="Set Variable name" doc:id="13abef3b-a703-4916-b845-5506f7ddf85f" variableName="name"/>
+		<logger level="INFO" doc:name="Logger" doc:id="50fa2e19-f826-4d12-a75f-ce677382ed00" message="#[vars.name]"/>
 		<choice doc:name="Choice" doc:id="3b84fc98-a335-4473-8a5a-1b1737c2ccbc" >
 			<when expression="#[vars.country == null]">
 				<choice doc:name="Choice" doc:id="99201803-5751-46e9-a979-7da2295a8f4d" >
 					<when expression="#[vars.name == null]">
+						<logger level="INFO" doc:name="Logger" doc:id="dac11bd6-2edd-4743-a232-477bc589ec94" message="country is null and name is null"/>
 						<db:select doc:name="Select" doc:id="84432aa2-b6f1-4e8b-89e6-6f28a2e89719" config-ref="Database_Config">
 			<db:sql><![CDATA[SELECT * FROM flights_customers
 WHERE accountType = :acc_type]]></db:sql>
-			<db:input-parameters><![CDATA[#[{'acc_type' : vars.acc_type}]]]></db:input-parameters>
+			<db:input-parameters><![CDATA[#[{'acc_type' : vars.accountType}]]]></db:input-parameters>
 		</db:select>
 					</when>
 					<otherwise >
+						<logger level="INFO" doc:name="Logger" doc:id="babbb0bc-6a83-4e76-912e-cfc215729dc1" message="country is null and name is not null" />
 						<db:select doc:name="Select with name" doc:id="9b996c06-388d-48fc-b34e-ec00ae44172b" config-ref="Database_Config" >
 							<db:sql ><![CDATA[SELECT * FROM flights_customers
 WHERE accountType = :acc_type 
 AND name LIKE (CONCAT('%',:name,'%'))]]></db:sql>
-							<db:input-parameters ><![CDATA[#[{'acc_type' : vars.acc_type, 'name' : vars.name}]]]></db:input-parameters>
+							<db:input-parameters ><![CDATA[#[{'acc_type' : vars.accountType, 'name' : vars.name}]]]></db:input-parameters>
 						</db:select>
 					</otherwise>
 				</choice>
@@ -32,20 +38,22 @@ AND name LIKE (CONCAT('%',:name,'%'))]]></db:sql>
 			<otherwise >
 				<choice doc:name="Choice" doc:id="dbcde6cb-fc09-4826-8c2b-038e451aca8a" >
 					<when expression="vars.name == null">
+						<logger level="INFO" doc:name="Logger" doc:id="96a5ae29-82dc-44a1-aa6c-e779891625e9" message="country is not null and name is null" />
 						<db:select doc:name="Select with country" doc:id="10a645ea-f9e2-483e-87f5-943970d9c45a" config-ref="Database_Config" >
 							<db:sql ><![CDATA[SELECT * FROM flights_customers
 WHERE accountType = :acc_type 
 AND country = :country]]></db:sql>
-							<db:input-parameters ><![CDATA[#[{'acc_type' : vars.acc_type, 'country' : vars.country}]]]></db:input-parameters>
+							<db:input-parameters ><![CDATA[#[{'acc_type' : vars.accountType, 'country' : vars.country}]]]></db:input-parameters>
 						</db:select>
 					</when>
 					<otherwise >
+						<logger level="INFO" doc:name="Logger" doc:id="aedc4844-363f-4ee4-b09a-9aad86803ae5" message="country is not null and name is not null"/>
 						<db:select doc:name="Select with name and country" doc:id="dcb217b8-f7ec-414c-bc2f-2301913ca0d3" config-ref="Database_Config" >
 							<db:sql ><![CDATA[SELECT * FROM flights_customers
 WHERE accountType = :acc_type 
 AND name LIKE (CONCAT('%',:name,'%'))
 AND country = :country]]></db:sql>
-							<db:input-parameters ><![CDATA[#[{'acc_type' : vars.acc_type, 'name' : vars.name, 'country' : vars.country}]]]></db:input-parameters>
+							<db:input-parameters ><![CDATA[#[{'acc_type' : vars.accountType, 'name' : vars.name, 'country' : vars.country}]]]></db:input-parameters>
 						</db:select>
 					</otherwise>
 				</choice>

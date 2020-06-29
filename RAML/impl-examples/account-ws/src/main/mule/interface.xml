@@ -120,7 +120,9 @@ output application/json
         </error-handler>
     </flow>
     <flow name="get:\accounts:accounts-api-config">
-        <flow-ref doc:name="getAccountFlow" doc:id="1c8aae84-faa6-43c8-a0e1-a9c3a7548684" name="getAccountFlow" />
+        <logger level="INFO" doc:name="Logger" doc:id="2318a86b-a6d3-409c-b21a-008dd2906b5a" message="&quot;The name of country is:&quot;" />
+        <logger level="INFO" doc:name="Logger" doc:id="6646c815-9c39-429c-af9f-cf81655d5b9a" message="#[attributes.queryParams.'country']" />
+        <flow-ref doc:name="Flow Reference" doc:id="6db13f9e-6091-4b9a-ad05-b6927010fa08" name="getAccountsFlow" />
     </flow>
     <flow name="post:\accounts:application\json:accounts-api-config">
         <flow-ref doc:name="createAccountFlow" doc:id="b1c9d0ee-52a3-43e4-b3c0-f4a97e4eec85" name="createAccountFlow" />
@@ -178,5 +180,22 @@ output application/json
     </flow>
     <flow name="get:\accounts\(ID):accounts-api-config">
         <flow-ref doc:name="getAccountByIdFlow" doc:id="49e429c2-6db5-4c1a-8742-3f6dfeee7555" name="getAccountByAccountIdFlow" />
+    </flow>
+    <flow name="delete:\accounts\(ID):accounts-api-config">
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core">
+            <ee:variables>
+                <ee:set-variable variableName="ID">attributes.uriParams.'ID'</ee:set-variable>
+            </ee:variables>
+        </ee:transform>
+        <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  message: "Account deleted (but not really)"
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
     </flow>
 </mule>

@@ -1,8 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
 	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
 
 	<flow name="getAccountsFlow" doc:id="a00bcba3-d4e9-463a-8cae-7d61ca47ec6c" >
@@ -29,6 +31,8 @@ http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/htt
 }]]]></http:query-params>
 		</http:request>
 	</flow>
+	
+	
 	<flow name="account-ws-clientFlow" doc:id="1a8feb60-d373-4c0f-b7c2-0b4b383939e8" >
 		<http:listener doc:name="Listener" doc:id="748f1636-e82a-4847-914b-ef43aacc2221" config-ref="HTTP_Listener_config" path="/bank/{ID}"/>
 		<http:request method="GET" doc:name="Request" doc:id="0d66425e-6ae9-4c33-971a-728d071ed490" config-ref="HTTP_Request_configuration" path="/accounts/{ID}">
@@ -45,4 +49,125 @@ http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/htt
 }]]]></http:uri-params>
 		</http:request>
 	</flow>
+	
+
+	<flow name="testPOSTAccount"
+		doc:id="f709b059-c9ea-416a-b204-3c279615ec93">
+		<http:listener doc:name="Listener"
+			doc:id="4c8586b3-fa4a-4606-ba43-1d60268c5519"
+			config-ref="HTTP_Listener_config" path="/testPOSTAccount"/>
+		<ee:transform doc:name="Transform Message"
+			doc:id="823ff0c2-b0c0-4979-9f2b-43cb45e328bf">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+    "address": "123 Main St., Dallas TX",
+    "country": "USA",
+    "firstName": "John",
+    "lastName": "Doe",
+    "miles": 999,
+    "postal": 77777,
+    "type": "personal"
+  }
+    
+  ]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<http:request method="POST" doc:name="Request"
+			doc:id="8037883a-005b-4bbc-80af-e39389bd7625"
+			config-ref="HTTP_Request_configuration" path="/accounts"
+			responseTimeout="300000">
+			<http:headers><![CDATA[#[output application/java
+---
+{
+	client_secret : "${account_srvc.client_secret}",
+	client_id : "${account_srvc.client_id}"
+}]]]></http:headers>
+		</http:request>
+	</flow>
+	
+	<flow name="testPutOneAccount"
+		doc:id="2a8a101a-5f7e-4725-9288-cb360d3ed5eb">
+		<http:listener doc:name="Listener"
+			doc:id="38cc89ce-ccd1-4bcf-b2d4-c919cb5920d8"
+			config-ref="HTTP_Listener_config" path="/testPutOneAccount"
+			allowedMethods="GET" />
+		<set-payload
+			value='#[output application/json 
+---   
+{     "firstName": "John",     "lastName": "Smith",     "address": "1002 Main Street, Springfield TX",     "postal": 77002,     "country": "USA",     "type": "personal",     "miles": 8492   }]'
+			doc:name="Set Payload" doc:id="34a8f3ad-0b2e-48d2-b2e6-e8f18e49f7ec"
+			mimeType="application/json" />
+		<http:request method="PUT" doc:name="Request"
+			doc:id="b68218e4-5735-4862-b4f8-d5f3509af226"
+			config-ref="HTTP_Request_configuration" path="/accounts/{id}"
+			responseTimeout="300000">
+			<http:headers><![CDATA[#[output application/java
+---
+{
+	client_secret : "${account_srvc.client_secret}",
+	client_id : "${account_srvc.client_id}"
+}]]]></http:headers>
+			<http:uri-params><![CDATA[#[output application/java
+---
+{
+	"id" : "4400"
+}]]]></http:uri-params>
+		</http:request>
+	</flow>
+	
+	<flow name="testPatchOneAccount"
+		doc:id="d2e31d7a-e667-4ed0-9d81-893500697972">
+		<http:listener doc:name="Listener"
+			doc:id="ff48fbaf-04b3-47e1-bae5-acf0d77c015f"
+			config-ref="HTTP_Listener_config" path="/testPatchOneAccount"
+			allowedMethods="GET" />
+		<set-payload
+			value='#[output application/json ---
+{     "firstName": "John",     "lastName": "Smith",     "address": "1002 Main Street, Springfield TX",     "postal": 77002,     "country": "USA",     "type": "personal",     "miles": 8492   }]'
+			doc:name="Set Payload" doc:id="4323149d-3bae-48a3-8006-fdfceadbc376"
+			mimeType="application/json" />
+		<http:request method="PATCH" doc:name="Request"
+			doc:id="da84d240-7056-4ec1-bf39-065090f25745"
+			config-ref="HTTP_Request_configuration" path="/accounts/{id}"
+			responseTimeout="300000">
+			<http:headers><![CDATA[#[output application/java
+---
+{
+	client_secret : "${account_srvc.client_secret}",
+	client_id : "${account_srvc.client_id}"
+}]]]></http:headers>
+			<http:uri-params><![CDATA[#[output application/java
+---
+{
+	"id" : "4400"
+}]]]></http:uri-params>
+		</http:request>
+	</flow>
+	
+	<flow name="testDeleteOneAccount"
+		doc:id="30cbfa72-aea7-450b-9b7e-328277dc5110">
+		<http:listener doc:name="Listener"
+			doc:id="29db6532-5d8a-4e3a-ae5f-5679bf8f6311"
+			config-ref="HTTP_Listener_config" path="/testDeleteOneAccount"
+			allowedMethods="GET" />
+		<http:request method="DELETE" doc:name="Request"
+			doc:id="b7aaf1a6-653f-46b0-8a0f-9ddd1540fb3b"
+			config-ref="HTTP_Request_configuration" path="/accounts/{id}"
+			responseTimeout="300000">
+			<http:headers><![CDATA[#[output application/java
+---
+{
+	client_secret : "${account_srvc.client_secret}",
+	client_id : "${account_srvc.client_id}"
+}]]]></http:headers>
+			<http:uri-params><![CDATA[#[output application/java
+---
+{
+	"id" : "4400"
+}]]]></http:uri-params>
+		</http:request>
+	</flow>	
 </mule>

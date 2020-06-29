@@ -126,11 +126,6 @@ traits:
                 error: Error occured while modifing account. 
     delete:
       description: Update Account for ID.
-      body:
-        application/json:
-          type: Account
-          examples:
-            input: !include examples/AccountExample.raml
       responses:
         201:
           body:

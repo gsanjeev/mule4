@@ -3,6 +3,6 @@ http:
   port: "9090"
   
 account_srvc:
-  host: "account-api-sanjeev.us-e2.cloudhub.io"
+  host: "account-web-sanjeev.us-e2.cloudhub.io"
   client_id: "ce0a1f53992b47d0a64591bf0078deb3"
   client_secret: "6EcbDF413C0243Fb900e786175bCA541"
