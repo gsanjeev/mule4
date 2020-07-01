@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:wsc="http://www.mulesoft.org/schema/mule/wsc" xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/current/mule-wsc.xsd">
+
+	<flow name="transferAccounts" doc:id="d83735c2-16b0-421e-aa91-68cae4fe790c" >
+		<http:request method="GET" doc:name="GET /accounts" doc:id="54399c4f-7da1-44f9-b810-b62bbab3d8dc" config-ref="HTTP_Request_configuration_account" path="${account.path}">
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	"client_secret" : "${account.client_secret}",
+	"client_id" : "${account.client_id}"
+}]]]></http:headers>
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+	("country" : attributes.queryParams['country'])  if (attributes.queryParams['country'] != null) ,
+	("name" : attributes.queryParams['name'])  if (attributes.queryParams['name'] != null) ,
+	"type" : attributes.queryParams.'type'
+}]]]></http:query-params>
+		</http:request>
+		<ee:transform doc:name="Build transaction request" doc:id="3efa7b9f-3e1a-4037-9a2e-4677080c0fb4" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+ns ns0 http://training.mulesoft.com/
+---
+
+ns0#GetTransactionsforCustomers: {
+	( payload map {
+		customerID: $.id as String
+		} 
+	)
+}
+]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="accounts" ><![CDATA[%dw 2.0
+output application/json
+---
+payload default []]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<wsc:consume doc:name="Retrieve transactions" doc:id="bb761aca-61d5-4aa5-a1bc-bff1a6b7d419" config-ref="Web_Service_Consumer_Config_transaction" operation="GetTransactionsforCustomers"/>
+		<ee:transform doc:name="Accounts and transactions" doc:id="0c1ffc8d-e58c-4b71-b66d-6f6f887ab7cb" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	"accounts" : vars.accounts,
+	"transactions" : 
+		(payload.body.GetTransactionsforCustomersResponse.*transaction map {
+			transactionID : $.transactionID,
+			customerRef : $.customerRef,
+			flightID : $.flightID,
+			region : $.region,
+			amount : $.amount
+			}
+		) default []
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="Build finance request" doc:id="a5f7bc61-0049-4696-abe5-0e6e013e8203" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+
+var directorIDs = ["JKLS483S","FJSA48JD","NMA4FJ9K"]
+
+//Combines Accounts and Transactions by the Account ID. Assigns each account to a
+//director
+fun consolidateAccountsTrans (payload) =
+  payload.accounts map ( (account, index) ->
+  using (id = account.id as String)
+  (
+    account ++
+    {
+      transactions: payload.transactions filter ($.customerRef == id)
+    } ++
+    {
+      assignedDirector: directorIDs[mod(index, sizeOf(directorIDs))]
+    }
+  )
+)
+---
+using (data = consolidateAccountsTrans(payload))
+(data groupBy $.assignedDirector)]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+			</ee:variables>
+		</ee:transform>
+		<http:request method="POST" doc:name="POST /accounts_transactions" doc:id="16bb6514-7daf-4869-b8aa-f59cc4fabb97" config-ref="HTTP_Request_configuration_finance" path="${finance.path}" responseTimeout="20000"/>
+		<ee:transform doc:name="Transform Message" doc:id="ec71cb75-08aa-4917-9edc-74d629f49d52" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message : "Processed $(sizeOf(vars.accounts)) records."
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

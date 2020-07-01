@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:wsc="http://www.mulesoft.org/schema/mule/wsc"
+	xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/current/mule-wsc.xsd">
+	<http:listener-config name="transfer-accounts-api-httpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="8081" />
+    </http:listener-config>
+	<http:request-config name="HTTP_Request_configuration_account" doc:name="HTTP Request configuration" doc:id="2046ed82-10a4-440d-979c-f1d10bb29ace" basePath="${account.basepath}" >
+		<http:request-connection protocol="${account.protocol}" host="${account.host}" port="${account.port}" />
+	</http:request-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="4b2f4893-aa23-4beb-9a9d-18a04894db33" file="properties\dev_config.yaml" />
+	<global-property doc:name="Global Property" doc:id="894f3883-765a-4956-b977-2d7dd963f243" name="env" value="dev" />
+	<wsc:config name="Web_Service_Consumer_Config_transaction" doc:name="Web Service Consumer Config" doc:id="c5993c48-46ba-4ddc-929d-fc201c039140" >
+		<wsc:connection wsdlLocation="${transaction.wsdl}" service="${transaction.service}" port="${transaction.port}">
+			<wsc:web-service-security actor="http://schemas.xmlsoap.org/soap/actor/next" />
+		</wsc:connection>
+	</wsc:config>
+	<http:request-config name="HTTP_Request_configuration_finance" doc:name="HTTP Request configuration" doc:id="d4262d80-eb7c-4b08-aef4-cdaf8ed73a35" basePath="${finance.basepath}" >
+		<http:request-connection protocol="${finance.protocol}" host="${finance.host}" port="${finance.port}" />
+	</http:request-config>
+</mule>

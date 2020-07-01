@@ -1,0 +1,24 @@
+http:
+  host: "0.0.0.0"
+  port: "8081"
+  
+account:
+  host: "account-api-sanjeev.us-e2.cloudhub.io"
+  port: "80"
+  protocol: "HTTP"
+  basepath: "/"
+  path: "/accounts"
+  client_id: "ce0a1f53992b47d0a64591bf0078deb3"
+  client_secret: "6EcbDF413C0243Fb900e786175bCA541"
+  
+transaction:
+  wsdl: "http://apdev-accounts-ws.cloudhub.io/api/transactions?wsdl"
+  service: "TransactionServiceService"
+  port: "TransactionServicePort"
+  
+finance:
+  host: "apdev-accounts-ws.cloudhub.io"
+  port: "80"
+  protocol: "HTTP"
+  basepath: "/api"
+  path: "/accounts_transactions"
