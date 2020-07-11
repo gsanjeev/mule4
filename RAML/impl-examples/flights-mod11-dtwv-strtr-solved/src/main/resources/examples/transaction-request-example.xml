@@ -1,0 +1,6 @@
+<ns0:getTransactionsforFlights xmlns:ns0="http://training.mulesoft.com/">
+	<flightID>UNITEDER38SD2015-10-20</flightID>
+	<flightID>UNITEDER38RD2015-10-19</flightID>	
+	<flightID>UNITEDER38RK2015-10-18</flightID>
+	<flightID>UNITEDER38MK2015-10-17</flightID>	
+</ns0:getTransactionsforFlights>

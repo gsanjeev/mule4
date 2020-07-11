@@ -24,4 +24,5 @@ http://www.mulesoft.org/schema/mule/wsc http://www.mulesoft.org/schema/mule/wsc/
 	<http:request-config name="HTTP_Request_configuration_finance" doc:name="HTTP Request configuration" doc:id="d4262d80-eb7c-4b08-aef4-cdaf8ed73a35" basePath="${finance.basepath}" >
 		<http:request-connection protocol="${finance.protocol}" host="${finance.host}" port="${finance.port}" />
 	</http:request-config>
+
 </mule>

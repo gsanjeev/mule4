@@ -1,0 +1,15 @@
+http.port: "8081"
+
+united.host: "mu.mulesoft-training.com"
+
+transaction:
+  wsdl: "http://apdev-accounts-ws.cloudhub.io/api/transactions?wsdl"
+  service: "TransactionServiceService"
+  port: "TransactionServicePort"
+  
+account:
+  host: "apdev-accounts-ws.cloudhub.io"
+  port: "80"
+  protocol: "HTTP"
+  basepath: "/api"
+  path: "/accountList"
