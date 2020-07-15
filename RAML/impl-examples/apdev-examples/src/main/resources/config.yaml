@@ -5,3 +5,13 @@ sfdc:
   username: "sanjeevtripathi@gmail.com"
   password: "kamal123"
   token: "HupRyy7Oo1GrIW1a5A6pzoDN"
+  
+file:
+  accountsDir: "F:/tmp/mule/file-connector/accounts/resources"
+  
+db:
+  host: "mudb.learn.mulesoft.com"
+  port: "3306"
+  user: "mule"
+  password: "mule"
+  database: "training"

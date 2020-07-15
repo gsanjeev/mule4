@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:ftp="http://www.mulesoft.org/schema/mule/ftp"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ftp http://www.mulesoft.org/schema/mule/ftp/current/mule-ftp.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="mealsngo" doc:id="d32e7024-dcdb-400f-a9c0-a5c8aaba542c" >
+		<ee:transform doc:name="Transform Message" doc:id="267e210c-264b-4ae4-9289-e85f41857d7e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/csv
+var threeMonthsFromNow = (now() + |P3M| )as Number
+---
+payload map {
+	gc_card_number: $.card_no,
+	gc_balance: $.amount_granted,
+	origin: p('muleBankID'),
+	card_type: "VISA",
+	expiration: threeMonthsFromNow
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<set-variable value="#['MULEBANK-' ++ vars.partnerName ++ '-' ++ vars.currentDate ++ '-' ++ vars.count ++ '.csv']" doc:name="ftpFileName" doc:id="c6d6aac5-24f4-4b71-a818-74b09ebe8e83" variableName="ftpFileName" />
+		<ftp:write doc:name="giftcards" doc:id="0844f79e-595e-4d26-b626-9187295c29e9" config-ref="Partner2_FTP_Config" path="#[vars.ftpFileName]"/>
+	</flow>
+</mule>

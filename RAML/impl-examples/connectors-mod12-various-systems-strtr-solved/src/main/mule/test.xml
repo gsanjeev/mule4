@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:ftp="http://www.mulesoft.org/schema/mule/ftp"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd 
+http://www.mulesoft.org/schema/mule/ftp http://www.mulesoft.org/schema/mule/ftp/current/mule-ftp.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	
+		<flow name="testFTP" doc:id="0ff551ad-5177-4157-970c-12537054233e" initialState="stopped">
+		<scheduler doc:name="Scheduler" doc:id="12f24a5a-e3f6-4043-9797-d19fdfecc5af" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="60" timeUnit="SECONDS"/>
+			</scheduling-strategy>
+		</scheduler>
+		<ftp:read doc:name="FTP" doc:id="f6242b03-5c82-4801-9184-58fe4a958ba8" path="test/testfile.csv" config-ref="Partner2_FTP_Config"/>
+		<logger level="INFO" doc:name="Log Payload" doc:id="7b8da061-7c8c-4725-a85c-c6171f458b11" message='#["\nTest file from FTP In-Memory Server :\n" ++ write(payload,"application/csv")]'/>
+	</flow>
+	<flow name="testDB" doc:id="2f8bd76a-bd66-4096-a1a5-355be2399867" initialState="stopped">
+		<scheduler doc:name="Scheduler" doc:id="fb946855-affc-4a3a-b1f1-4494f685d691" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="120" startDelay="5" timeUnit="SECONDS"/>
+			</scheduling-strategy>
+		</scheduler>
+		<db:select doc:name="Select" doc:id="a03e022c-c914-4f46-b6bc-23a0ff5488b6" config-ref="Partner1_Database_Configuration">
+			<db:sql >SELECT * FROM Giftcards</db:sql>
+		</db:select>
+		<logger level="INFO" doc:name="Log Payload" doc:id="1c89578b-9d24-438c-8d2d-7c6636d8f8e7" message='#["\nTest Payload from Derby In-Memory Database:\n" ++ write(payload,"application/json")]'/>
+	</flow>
+	<flow name="giftcards" doc:id="c6b6f321-22ac-4f94-baf5-9ce68a9a3269" >
+		<http:listener doc:name="Listener" doc:id="b7c906ea-d941-4d3c-b9ba-1b21aa604da2" config-ref="HTTP_Listener_config" path="/giftcards" allowedMethods="GET"/>
+		<db:select doc:name="giftcards" doc:id="1b63f834-2f1c-48d0-877d-e95a075d521b" config-ref="Partner1_Database_Configuration">
+			<db:sql ><![CDATA[SELECT * FROM giftcards]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="502212b0-054e-48a3-a8a9-a89b490ed896" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="payload" doc:id="4e10fe47-c337-485c-a9f3-ece4bc724fd9" message="#[payload]"/>
+	</flow>
+	
+	
+	
+	
+	
+	
+	
+</mule>

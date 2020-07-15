@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+	<flow name="online-retail-plus" doc:id="6c61935e-f0a8-4b8a-9ae9-fb2258d0e537" >
+		<ee:transform doc:name="Transform Message" doc:id="dd9df245-49b1-4b35-b2a6-625d2ca53972" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/csv
+---
+payload map {
+	cardNo: $.card_no,
+	amount: $.amount_granted,
+	bankOriginationID: p('muleBankID')
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<set-variable value="#['MULEBANK-' ++ vars.partnerName ++ '-' ++ vars.currentDate ++ '-' ++ vars.count ++ '.csv']" doc:name="fileName" doc:id="db511904-32b5-4bd0-b4b0-172c3aa36137" variableName="fileName"/>
+		<file:write doc:name="Write" doc:id="4283a7b2-77a6-4dcc-96aa-5e163f36e6dd" config-ref="File_Config" path="#['output/' ++ vars.fileName]"/>
+	</flow>
+</mule>
