@@ -1,11 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:ftp="http://www.mulesoft.org/schema/mule/ftp"
-	xmlns="http://www.mulesoft.org/schema/mule/core"
-	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+<mule xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:ftp="http://www.mulesoft.org/schema/mule/ftp"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/ftp http://www.mulesoft.org/schema/mule/ftp/current/mule-ftp.xsd
-http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd">
 	<flow name="mealsngo" doc:id="d32e7024-dcdb-400f-a9c0-a5c8aaba542c" >
+		<jms:listener doc:name="JMS: partner2.queue" doc:id="38bc0fc3-1dff-4095-9216-2105722379c0" config-ref="JMS_Config" destination="${partner2.queue}" >
+			<jms:response >
+				<jms:properties ><![CDATA[#[{
+	   "statusMessage": vars.statusMessage
+ }]]]></jms:properties>
+			</jms:response>
+		</jms:listener>
 		<ee:transform doc:name="Transform Message" doc:id="267e210c-264b-4ae4-9289-e85f41857d7e" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
@@ -21,7 +29,18 @@ payload map {
 }]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<set-variable value="#['MULEBANK-' ++ vars.partnerName ++ '-' ++ vars.currentDate ++ '-' ++ vars.count ++ '.csv']" doc:name="ftpFileName" doc:id="c6d6aac5-24f4-4b71-a818-74b09ebe8e83" variableName="ftpFileName" />
-		<ftp:write doc:name="giftcards" doc:id="0844f79e-595e-4d26-b626-9187295c29e9" config-ref="Partner2_FTP_Config" path="#[vars.ftpFileName]"/>
+		<set-variable value="#['MULEBANK-' ++ p('partner2.name') ++ '-' ++ 
+attributes.properties.userProperties.createDate ++ '-' 
+++ attributes.properties.userProperties.recordsCount ++ '.csv']" doc:name="ftpFileName" doc:id="c6d6aac5-24f4-4b71-a818-74b09ebe8e83" variableName="ftpFileName" />
+		<try doc:name="Try" doc:id="21589520-d9ea-4b62-a457-510f5108dd70" >
+			<ftp:write doc:name="giftcards" doc:id="0844f79e-595e-4d26-b626-9187295c29e9" config-ref="Partner2_FTP_Config" path="#[vars.ftpFileName]" />
+			<raise-error doc:name="filesystem.doesNotExist" doc:id="9fc663a3-af7d-47f6-ba4b-804211113281" type="MULE:CONNECTIVITY" description='filesystem.doesNotExist'/>
+		</try>
+		<set-variable value="SUCCESS" doc:name="success status" doc:id="b5a6771b-ecb7-41aa-83bf-286a55e6afe4" variableName="statusMessage" />
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="86069b18-d56e-4960-8e07-b34e5dff446a" type="ANY" >
+				<set-variable value="#['ERROR OCCURRED WHILE PROCESSING:' ++ error.description]" doc:name="error status" doc:id="1d455b58-ffa7-4f02-a80f-cd237636595f" variableName="statusMessage" />
+			</on-error-continue>
+		</error-handler>
 	</flow>
 </mule>

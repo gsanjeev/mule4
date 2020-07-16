@@ -1,21 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:file="http://www.mulesoft.org/schema/mule/file"
-	xmlns="http://www.mulesoft.org/schema/mule/core"
-	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+<mule xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
-http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd">
 	<flow name="processVisaGiftCards" doc:id="738116aa-9915-4a9b-a864-e9fcc9018b7c" >
-		<file:listener doc:name="visa-gift-cards.cvs" doc:id="f6bf3059-a10d-46ad-a5d0-1d5199b92efe" config-ref="File_Config" directory="input" moveToDirectory="processed" renameTo='#[attributes.fileName ++ ".backup"]'>
+		<file:listener doc:name="visa-gift-cards.cvs" doc:id="f6bf3059-a10d-46ad-a5d0-1d5199b92efe" config-ref="File_Config" directory="input" moveToDirectory="processed" renameTo='#[vars.backupFileName]' autoDelete="true">
 			<scheduling-strategy >
-				<fixed-frequency />
+				<fixed-frequency frequency="${master.pollFrequency}"/>
 			</scheduling-strategy>
 			<file:matcher filenamePattern="*.csv" />
 		</file:listener>
+		<set-variable value='#[attributes.fileName ++ ".backup"]' doc:name="backupFileName" doc:id="4ef2797f-0184-4a5c-9389-24b567654cf5" variableName="backupFileName"/>
 		<ee:transform doc:name="payload, partner, count and  currentDate" doc:id="21bf9445-df83-4416-97aa-5c38be25a7bc" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
-output application/json
+output application/java
 ---
 payload]]></ee:set-payload>
 			</ee:message>
@@ -40,20 +42,39 @@ now() as Number]]></ee:set-variable>
 		<logger level="INFO" doc:name="Logger" doc:id="594880c9-a480-488c-a4a2-f6222a1bd912" message='#["\npayload is: \n"  ++ write(payload, "application/csv")]'/>
 		<choice doc:name="Choice" doc:id="7758e630-1e83-4f2c-81ac-01076dccfe03">
 			<when expression="#[vars.partnerName == p('partner1.name')]">
-				<flow-ref doc:name="foodnsavings" doc:id="3d7dbeeb-4875-4987-8970-37333267082a" name="foodnsavings" />
+				<jms:publish-consume doc:name="JMS: partner1.queue" doc:id="81767d51-d9ab-4928-b218-cfde3a2cd1a3" destination="${partner1.queue}">
+					<jms:message >
+						<jms:body ><![CDATA[#[output applicatoin/json --- payload]]]></jms:body>
+						<jms:properties ><![CDATA[#[{"publisher":  p('muleBankID')}]]]></jms:properties>
+					</jms:message>
+				</jms:publish-consume>
 			</when>
-			<when expression="#[vars.partnerName == p('partner2.name')]">
-					<flow-ref doc:name="mealsngo" doc:id="fcef3835-1189-4de8-96ec-36b77d587116" name="mealsngo" />
-				</when>
-				<when expression="#[vars.partnerName == p('partner3.name')]">
-					<flow-ref doc:name="online-retail-plus" doc:id="5717efeb-aabf-4503-b2e0-0507d1ea1192" name="online-retail-plus" />
-				</when>
-				<otherwise>
+			<when expression="#[vars.partnerName == p('partner2.name')]" >
+				<jms:publish-consume doc:name="JMS: partner2.queue" doc:id="bc85dcce-c2bd-4155-a1c7-7945d567d8f0" config-ref="JMS_Config" destination="${partner2.queue}">
+					<jms:message >
+						<jms:body ><![CDATA[#[output applicatoin/json --- payload]]]></jms:body>
+						<jms:properties ><![CDATA[#[{"publisher":  p('muleBankID'), "createDate": vars.currentDate, "recordsCount": vars.count}]]]></jms:properties>
+					</jms:message>
+				</jms:publish-consume>
+			</when>
+			<when expression="#[vars.partnerName == p('partner3.name')]">
+			<jms:publish-consume doc:name="JMS partner3.queue" doc:id="b8dca834-0e7a-4157-8320-04809f10b7f8" destination="${partner3.queue}">
+				<jms:message >
+					<jms:body ><![CDATA[#[output applicatoin/json --- payload]]]></jms:body>
+					<jms:properties ><![CDATA[#[{"publisher":  p('muleBankID'), "createDate": vars.currentDate, "recordsCount": vars.count}]]]></jms:properties>
+				</jms:message>
+			</jms:publish-consume>
+			</when>
+			<otherwise>
 				<logger level="INFO" doc:name="payload" doc:id="2565d87b-dba0-452a-83d5-70b61556c245" message="This is not foodnsaving record: #[payload.partner]" />
-				<set-payload value='#[output text/plain --- "Partner: " ++ vars.partner ++ ".  Not transferring the file."]' doc:name="Set Payload" doc:id="b988face-9913-4127-9a1e-cbd4169d8214" />
+				<set-payload value='#[output text/plain --- "Partner: " ++ vars.partnerName ++ ".  Not transferring the file."]' doc:name="Set Payload" doc:id="b988face-9913-4127-9a1e-cbd4169d8214" />
 				<file:write doc:name="Write" doc:id="86d63dfe-45c1-45e5-81eb-92d3ad3727e0" path="#[p('file.workingDir') ++ '/processed/' ++ attributes.fileName ++ '-report.txt']" />
 			</otherwise>
 		</choice>
-		<logger level="INFO" doc:name="Logger" doc:id="8de11a2f-76e9-4fd3-9251-31c880dcaada" message="visa gift cards file processed."/>
+		<set-payload value='#["Processed " ++ vars.count ++ " cards for " ++ 
+vars.partnerName ++ " with Status: " ++ 
+attributes.properties.userProperties.statusMessage default ""]' doc:name="status" doc:id="320b9405-0881-40d2-b681-bf014e77a921" />
+		<set-variable value='#[now() as  String  {format: "yyyy-MM-dd-HH_mm_ss"}]' doc:name="statusCreateDate" doc:id="ab0d8d8c-4daa-4471-92dc-9d6ca6de99be" variableName="statusCreateDate"/>
+		<file:write doc:name="status" doc:id="57b0d6c3-b1bf-431f-910b-016d33edc600" config-ref="File_Config" path='#["processed" ++ "/$(vars.partnerName)-gc-report-$(vars.statusCreateDate).txt"]'/>
 	</flow>
 </mule>

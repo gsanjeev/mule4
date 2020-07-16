@@ -1,10 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core"
-	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
-http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+<mule xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd">
 	<flow name="foodnsavings" doc:id="d27fdb81-ddee-499e-801b-84365502e66b" >
+		<jms:listener doc:name="JMS: partner1.queue " doc:id="135a72e2-c24a-42f4-9f59-97b690321c51" config-ref="JMS_Config" destination="${partner1.queue}">
+			<jms:response >
+				<jms:properties ><![CDATA[#[{
+	   "statusMessage": vars.statusMessage
+ }]]]></jms:properties>
+			</jms:response>
+		</jms:listener>
 		<foreach doc:name="For Each" doc:id="93e6ef90-d7bc-48c6-ab44-29544fe65f24" collection="#[payload]">
 			<db:insert doc:name="Insert giftCards" doc:id="2f15eba8-ae02-4c9e-b328-16de9be8673f" config-ref="Partner1_Database_Configuration">
 			<db:sql><![CDATA[INSERT INTO giftcards ( number, sourceID, balance, createdOn) 
@@ -12,5 +20,11 @@ VALUES (:card_no, :sourceID, :amount_granted, :createdOn)]]></db:sql>
 			<db:input-parameters><![CDATA[#[{card_no: payload.card_no, sourceID: p('muleBankID'), amount_granted: payload.amount_granted, createdOn: now() as String {format: "yyyy-MM-dd HH:mm:ss"}}]]]></db:input-parameters>
 		</db:insert>
 		</foreach>
+		<set-variable value="SUCCESS" doc:name="success status" doc:id="acbb7252-9b51-4a97-8b33-32d4fdb4e0f2" variableName="statusMessage" />
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="7d7b0916-4b15-4179-93b7-e6fa93f1bcd7" type="ANY">
+				<set-variable value="'ERROR OCCURRED WHILE PROCESSING:' ++ error.description" doc:name="error status" doc:id="fe5777d9-99ff-4f1a-bca5-1e38075a7710" variableName="statusMessage" />
+			</on-error-continue>
+		</error-handler>
 	</flow>
 </mule>
