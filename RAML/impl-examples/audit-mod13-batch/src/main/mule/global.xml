@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:vm="http://www.mulesoft.org/schema/mule/vm" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd">
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="07fd810d-70b1-4485-9941-2ee524d051ec" >
+		<db:my-sql-connection host="${db.host}" port="${db.port}" user="${db.user}" password="${db.password}" database="${db.database}" />
+	</db:config>
+	<configuration-properties doc:name="Configuration properties" doc:id="41ae338e-4a4f-4248-954d-53491255316b" file="properties/${env}-config.yaml" />
+	<global-property doc:name="Global Property" doc:id="a84933ab-83d1-4168-800c-10eb5e4294e7" name="env" value="dev" />
+	<file:config name="File_Config" doc:name="File Config" doc:id="504a1a02-86b8-4c5c-a931-71dbcfb42c80" >
+		<file:connection workingDir="${file.workingDir}" />
+	</file:config>
+	<vm:config name="VM_Config" doc:name="VM Config" doc:id="abf2a46b-1052-45a9-a379-ca7b4c373d95" >
+		<vm:queues >
+			<vm:queue queueName="validate" />
+		</vm:queues>
+	</vm:config>
+	<vm:config name="VM_failed_record_Config" doc:name="VM Config" doc:id="84a64c5b-ca32-4d98-a8fd-f899c34022e2" >
+		<vm:queues >
+			<vm:queue queueName="deadletter" />
+		</vm:queues>
+	</vm:config>
+</mule>

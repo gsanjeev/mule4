@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:batch="http://www.mulesoft.org/schema/mule/batch"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:vm="http://www.mulesoft.org/schema/mule/vm" xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+	<flow name="auditFlightsTransactions" doc:id="03915bad-0d2e-436e-9e6e-a14947613118" >
+		<scheduler doc:name="audit" doc:id="7cd46399-f593-4dde-b345-45670c3b7d05" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="60" startDelay="15" timeUnit="SECONDS"/>
+			</scheduling-strategy>
+		</scheduler>
+		<os:retrieve doc:name="lastTransactionID" doc:id="26f8277a-4272-4f29-bd30-a831f57d5533" key="lastTransactionID" target="lastTransactionID">
+			<os:default-value ><![CDATA[0]]></os:default-value>
+		</os:retrieve>
+		<db:select doc:name="flights_transactions" doc:id="f5f3a497-9771-4b2b-ab74-749fba710c1a" config-ref="Database_Config" fetchSize="10" maxRows="10">
+			<db:sql ><![CDATA[SELECT * FROM flights_transactions
+WHERE transactionID > :transactionID]]></db:sql>
+			<db:input-parameters ><![CDATA[#[{transactionID: vars.lastTransactionID}]]]></db:input-parameters>
+		</db:select>
+		<os:store doc:name="lastTransactionID" doc:id="188a0711-88f8-434c-9cac-8c0c627a65ee" key="lastTransactionID">
+			<os:value ><![CDATA[#[max(payload.*transactionID)]]]></os:value>
+		</os:store>
+		<batch:job jobName="auditBatchJob" doc:id="fc97991d-9474-4491-a0da-167ffee18939">
+			<batch:process-records >
+				<batch:step name="validate" doc:id="f11a93ff-7a0a-4f48-84f3-c16d8e84f3ae" >
+					<vm:publish-consume queueName="validate" doc:name="validate" doc:id="88f9c2a8-e9dd-466f-89df-772e27e38cad" config-ref="VM_Config" target="auditRequired" timeoutUnit="MINUTES"/>
+				</batch:step>
+				<batch:step name="audit" doc:id="bb2c66d6-12f3-43f2-a301-0622d7e26c73" acceptExpression="#[ vars.auditRequired]">
+					<batch:aggregator doc:name="Aggregate 50 records" doc:id="7f7ba301-3db5-420d-bd09-f93e3ade0b53" size="50">
+						<file:write doc:name="audit record" doc:id="5e34ae9e-8c72-4c9f-a37c-e4ceb81ca9cf" config-ref="File_Config" path="#[&quot;$(p('file.outputDir'))/batchFile_$(now() as String {format: 'YYYY-MM-dd-HH.mm.SS'}).csv&quot;]">
+							<file:content ><![CDATA[#[output application/csv --- payload]]]></file:content>
+						</file:write>
+					</batch:aggregator>
+				</batch:step>
+				<batch:step name="noaudit" doc:id="ef69d470-3c46-438b-ad95-9d3b4628e80e" acceptExpression="#[ not vars.auditRequired]">
+					<vm:publish doc:name="Publish" doc:id="a009376b-b2a6-45ce-a2c6-cb5c45de4a45" config-ref="VM_failed_record_Config" queueName="deadletter" timeoutUnit="MINUTES"/>
+					<batch:aggregator doc:name="Aggregate failed 50 records" doc:id="7965168a-7ed2-4855-ab0a-82e3b83e90f5" size="50" >
+						<file:write doc:name="failed record" doc:id="f6c90ddf-4865-45d5-97ce-6a636180ec93" config-ref="File_Config" path="#[&quot;$(p('file.outputDir'))/batchFileFailedRecords_$(now() as String {format: 'YYYY-MM-dd-HH.mm.SS'}).csv&quot;]" >
+							<file:content ><![CDATA[#[output application/csv --- payload]]]></file:content>
+						</file:write>
+					</batch:aggregator>
+				</batch:step>
+			</batch:process-records>
+			<batch:on-complete >
+				<logger level="INFO" doc:name="Summary" doc:id="bcc4d2db-d9b7-4434-8ce0-673dab368e4b" />
+			</batch:on-complete>
+		</batch:job>
+	</flow>
+	<flow name="validate" doc:id="681f6432-2444-432a-8a8e-0ba550874117" >
+		<vm:listener doc:name="validate" doc:id="0edd543d-8e3e-49c9-b6dd-f14ad8a05eab" config-ref="VM_Config" queueName="validate"/>
+		<set-variable value="#[payload]" doc:name="transactionPayload" doc:id="7ff75965-ccbc-435e-8d1b-3b2b2fb38c68" variableName="transactionPayload"/>
+		<ee:transform doc:name="Transform Message" doc:id="39b32d39-b585-49de-9a64-010ac4779341" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+if (mod(payload.transactionID , 4) == 0)
+	true
+else
+	false]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<choice doc:name="Choice" doc:id="2a7ff63b-558e-4ebf-9239-b04bde434471" >
+			<when expression="#[mod(vars.transactionPayload.transactionID , 10) == 6]">
+				<ee:transform doc:name="Transform Message" doc:id="75ca183e-cc1f-48c3-8da9-c0056fabe973" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+import * from dw::Runtime
+output application/java
+---
+payload wait(6000)]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<logger level="INFO" doc:name="Logger" doc:id="63cc7f33-b0e9-4984-ade2-c91f21830bcf" message="#[vars.transactionPayload]"/>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="Logger" doc:id="ed6827b9-a561-4766-8350-a9c72a943a14" message="validate"/>
+	</flow>
+	<flow name="audit-mod13-batchFlow" doc:id="77cda846-4dba-4258-b321-1473ca22ca3e" >
+		<vm:listener doc:name="Listener" doc:id="6b5f8b1a-8803-4636-ba3d-c35c45506263" config-ref="VM_failed_record_Config" queueName="deadletter"/>
+		<logger level="INFO" doc:name="payload" doc:id="6d1d2ec3-5359-48b2-bdf9-c4684f33eac9" message="#[payload.transactionID]"/>
+	</flow>
+</mule>
