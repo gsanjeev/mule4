@@ -78,7 +78,7 @@ payload]]></ee:set-payload>
 			</batch:on-complete>
 		</batch:job>
 	</flow>
-	<flow name="syncDBAccountsToCSV" doc:id="2da4b803-c85f-4c9b-afaf-e5693bbf04c0" initialState="started">
+	<flow name="syncDBAccountsToCSV" doc:id="2da4b803-c85f-4c9b-afaf-e5693bbf04c0" initialState="stopped">
 		<db:listener doc:name="accounts" doc:id="fd1f8469-9c52-44a3-af9c-e4270c91947f" config-ref="Database_Config" table="accounts" watermarkColumn="accountID" idColumn="accountID">
 			<scheduling-strategy >
 				<fixed-frequency frequency="10" timeUnit="SECONDS"/>

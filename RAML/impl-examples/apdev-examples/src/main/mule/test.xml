@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:vm="http://www.mulesoft.org/schema/mule/vm" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd">
+	<flow name="sendGreeting" doc:id="8c6509ca-8c73-40db-9b8f-150f080a9722" >
+		<scheduler doc:name="Scheduler" doc:id="68443570-cec8-4d45-b75e-a45f1e157396" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="60" startDelay="15" timeUnit="SECONDS"/>
+			</scheduling-strategy>
+		</scheduler>
+		<vm:publish queueName="greeting" doc:name="Publish" doc:id="ecb8bad6-37ab-4e46-8eef-d61efa36b8a7" config-ref="greeting_VM_Config">
+			<vm:content ><![CDATA[#["Hello"]]]></vm:content>
+		</vm:publish>
+		<logger level="INFO" doc:name="Logger" doc:id="103947a4-8221-49c2-88be-14dd4e575208" message="Greeting published."/>
+	</flow>
+	<flow name="recieveGreeting" doc:id="da0b145e-df56-4011-baa8-b56c8511a969" initialState="stopped">
+		<vm:listener queueName="greeting" doc:name="Listener" doc:id="bd967d44-c1eb-48a1-95af-6e73847d0bc1" config-ref="greeting_VM_Config"/>
+		<logger level="INFO" doc:name="payload" doc:id="329f7097-7604-4007-a096-515755928060" message="#[payload]"/>
+	</flow>
+	<flow name="greet" doc:id="934c73a6-e7c7-40d9-9223-e3ae149212f5" >
+		<scheduler doc:name="Scheduler" doc:id="f42359f5-e59e-4aec-82a6-7a2a56e89eca" >
+			<scheduling-strategy >
+				<fixed-frequency timeUnit="SECONDS" frequency="90" startDelay="20"/>
+			</scheduling-strategy>
+		</scheduler>
+		<vm:consume doc:name="greet" doc:id="91966e5f-bcb8-430f-8acc-e60dac3c6962" config-ref="greeting_VM_Config" queueName="greeting"/>
+		<logger level="INFO" doc:name="payload" doc:id="15c947b9-5f06-41f4-9718-da4725c5566f" message='#[payload ++ " from greet flow"]'/>
+	</flow>
+</mule>

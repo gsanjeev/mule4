@@ -38,5 +38,10 @@ http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/
 			<jms:factory-configuration />
 		</jms:active-mq-connection>
 	</jms:config>
+	<vm:config name="greeting_VM_Config" doc:name="VM Config" doc:id="e0e6f5b8-7e75-4951-92e5-346f870c72ac" >
+		<vm:queues >
+			<vm:queue queueName="greeting" />
+		</vm:queues>
+	</vm:config>
 	
 </mule>
