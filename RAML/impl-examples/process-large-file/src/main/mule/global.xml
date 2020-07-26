@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:vm="http://www.mulesoft.org/schema/mule/vm" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd">
+	<file:config name="File_Config" doc:name="File Config" doc:id="26adaad0-6d60-4557-b32f-d51c6e8e4f6d" >
+		<file:connection workingDir="${file.workingDir}" />
+	</file:config>
+	<configuration-properties doc:name="Configuration properties" doc:id="f3c4be48-3569-4f98-bc63-4a316ff481ae" file="properties/${env}-properties.yaml" />
+	<global-property doc:name="Global Property" doc:id="c8d96664-b041-4d8f-aaad-5fd7aebe5a26" name="env" value="dev" />
+	<vm:config name="VM_Config" doc:name="VM Config" doc:id="bcb7f097-9012-4393-bd23-fd8387e896d4" >
+		<vm:queues >
+			<vm:queue queueName="validate" />
+		</vm:queues>
+	</vm:config>
+</mule>

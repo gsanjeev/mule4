@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:aggregators="http://www.mulesoft.org/schema/mule/aggregators" xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
+	xmlns:batch="http://www.mulesoft.org/schema/mule/batch"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd
+http://www.mulesoft.org/schema/mule/aggregators http://www.mulesoft.org/schema/mule/aggregators/current/mule-aggregators.xsd">
+	<flow name="processCards" doc:id="4f1ab48f-8c68-4daf-96ae-adc9a39486be" initialState="stopped">
+		<scheduler doc:name="Scheduler" doc:id="5b8ecc29-578c-4c8c-b1e7-2b55ed0ea0fc" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="60" timeUnit="MINUTES"/>
+			</scheduling-strategy>
+		</scheduler>
+		<logger level="INFO" doc:name="Logger" doc:id="9cdd8d32-7e43-4282-9115-c3e594abbc19" message="process started."/>
+		<file:read doc:name="card file" doc:id="3a41e53d-55a3-4952-808f-b0897d5f524f" config-ref="File_Config" path="#[p('file.inputDir') ++ p('file.name')]" outputMimeType="application/csv; streaming=true; header=true"/>
+		<logger level="INFO" doc:name="Logger" doc:id="e66130c7-6d34-4ea8-95ca-37e413846644" message="File reading started"/>
+		<ee:transform doc:name="Transform Message" doc:id="8feddc92-3fe7-499a-a51b-374648e1a3e5">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/csv
+---
+payload as Iterator]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="a0d3f0eb-c2cd-48fe-ad34-7e15b8281c80" message="file writing will start"/>
+		<file:write doc:name="Write" doc:id="e1af2366-a9a6-4638-a472-34945f19066a" config-ref="File_Config" path="#[p('file.outputDir') ++ (attributes.fileName  replace &quot;.json&quot; with(&quot;.csv&quot;))]" mode="APPEND">
+			<file:content ><![CDATA[#[output application/csv header=false --- payload]]]></file:content>
+		</file:write>
+		<logger level="INFO" doc:name="Logger" doc:id="e467cfdc-640c-4ac8-8974-79d46617d7c4" message="process ended."/>
+	</flow>
+	<flow name="processCardsInBatch" doc:id="a5a80c35-c757-49cd-bb2b-ccd30662f1a6" initialState="started">
+		<scheduler doc:name="Schedule Process" doc:id="73a1a262-9a07-4cdb-a9e6-fae21281064b" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="14400" timeUnit="SECONDS" startDelay="10"/>
+			</scheduling-strategy>
+		</scheduler>
+		<logger level="INFO" doc:name="Before reading file" doc:id="135a74aa-62b3-41ff-9ec0-eaad3ed6583c" message="Before reading file"/>
+		<file:read doc:name="card file" doc:id="0c35aa9b-5072-438d-9c7a-42dab4599f72" config-ref="File_Config" path="#[p('file.inputDir') ++ p('file.name')]" outputMimeType="application/csv; streaming=true; header=true">
+			<ee:repeatable-file-store-stream inMemorySize="128" />
+		</file:read>
+		<set-variable value="#[p('file.outputDir') ++ attributes.fileName]" doc:name="output file" doc:id="b4dd6836-8cd7-462d-8978-22a9e2cfa758" variableName="outputFilePath"/>
+		<ee:transform doc:name="Transform Message" doc:id="5d2fa7a4-6f20-4ddd-b985-2c6a9dc9f963" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload as Iterator]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Process started" doc:id="c695b2fd-1c9f-4eb0-9ea4-93b0bcde3930" message="Process started" />
+		<batch:job jobName="cardProcessJob" doc:id="ee9bfa16-a9be-4fbc-ad77-3db17dc5c4b1" blockSize="5000">
+			<batch:process-records >
+				<batch:step name="validateStep" doc:id="84d233f1-7ee1-4729-b41c-7829fa9cd2ce" >
+					<ee:transform doc:name="validate card" doc:id="6def9a15-ac0f-4369-9710-30b11e58f3e1" >
+						<ee:message />
+						<ee:variables >
+							<ee:set-variable variableName="valid" ><![CDATA[%dw 2.0
+output application/java
+---
+
+if (( mod(payload.card_no as Number,10) == 0 ) 
+	and ( mod(payload.amount_granted as Number,30) == 0 ) 
+	and (isOdd(payload.processor_id))
+)	
+	true	
+else
+	false]]></ee:set-variable>
+						</ee:variables>
+					</ee:transform>
+				</batch:step>
+				<batch:step name="writeValidStep" doc:id="2add41aa-be0b-4600-a2ab-a1d9646eef40" acceptExpression="#[vars.valid default false]" acceptPolicy="ALL">
+					<batch:aggregator doc:name="Aggregator 1000" doc:id="c9caf66d-2f22-498d-82ee-fe60695f8bed" size="2000">
+						<logger level="INFO" doc:name="Logger" doc:id="e1a46ca9-f96a-4474-bb09-d4799d64ff17" message='#["Going write next batch of " ++ sizeOf(payload) ++ " records."]' />
+						<file:write doc:name="result csv file" doc:id="dc50c764-36d9-4edd-8a5d-1af826db5ced" config-ref="File_Config" path="#[vars.outputFilePath]" mode="APPEND" >
+							<file:content ><![CDATA[#[output application/csv header=false --- payload]]]></file:content>
+						</file:write>
+					</batch:aggregator>
+				</batch:step>
+			</batch:process-records>
+			<batch:on-complete >
+				<logger level="INFO" doc:name="Logger" doc:id="18f8acd4-5ff1-46bc-b61e-99d77928eeb9" message="Batch processed."/>
+			</batch:on-complete>
+		</batch:job>
+		<logger level="INFO" doc:name="Process completed" doc:id="c8a7e396-11ac-42ea-a68a-02ad6d06f2d5" message="process completed"/>
+	</flow>
+	<flow name="validate" doc:id="6a729fa4-22e3-4714-9320-da02f01a1606" >
+		<vm:listener doc:name="Listener" doc:id="97bc7196-f516-4c6a-9779-933f71b04980" config-ref="VM_Config" queueName="validate" timeout="50"/>
+		<ee:transform doc:name="Transform Message" doc:id="d6d9e807-0e28-4ecf-9a9e-607ff47c717d" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+
+if (( mod(payload.card_no as Number,10) == 0 ) 
+	and ( mod(payload.amount_granted as Number,30) == 0 ) 
+	and (isOdd(payload.processor_id))
+)	
+	true	
+else
+	false]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	
+	<flow name="processCardsInSequence" doc:id="094d1941-b738-40c0-bda2-8ee5bb6e8566" initialState="stopped">
+		<scheduler doc:name="Schedule Process" doc:id="acb6901a-b944-4489-b969-68c91ae4f455" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="3600" timeUnit="SECONDS" startDelay="5"/>
+			</scheduling-strategy>
+		</scheduler>
+		<logger level="INFO" doc:name="Before reading file" doc:id="a07f394d-bb37-4e28-abf6-6fe8005936b5" message="Before reading file"/>
+		<file:read doc:name="card file" doc:id="0cb54c7e-fbde-49ba-9288-1ad2bf9a78c3" config-ref="File_Config" path="#[p('file.inputDir') ++ p('file.name')]" outputMimeType="application/csv; streaming=true; header=true" >
+			<ee:repeatable-file-store-stream inMemorySize="64" />
+		</file:read>
+		<logger level="INFO" doc:name="Process started" doc:id="54954695-d47d-41c9-9d78-d0ed5bc25c48" message="Process started" />
+		<set-variable value="#[p('file.outputDir') ++ (attributes.fileName  replace &quot;.csv&quot; with(&quot;.json&quot;))]" doc:name="outputFilePath" doc:id="88b8e964-4d88-4725-b788-f8a3310d4170" variableName="outputFilePath"/>
+		<logger level="INFO" doc:name="Logger" doc:id="e6ac7b5f-1af2-4eb2-bda4-c38f4f0fc491" message="transformed to iterator"/>
+		<set-variable value="#[[]]" doc:name="cardRecords" doc:id="1f184f33-9657-4ffa-b572-c42e70281b87" variableName="cardRecords"/>
+		<ee:transform doc:name="Transform Message" doc:id="bfe8b086-dcf2-495c-922e-24014f4fd165" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload as Iterator]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="c71755f3-3af8-4fb7-b5b0-adb5aaaea3d8">
+			<vm:publish-consume doc:name="Publish consume" doc:id="0bea8786-8642-4a69-81ee-af4a9eeaa5ce" config-ref="VM_Config" queueName="validate" target="valid" timeout="50" />
+			<choice doc:name="Choice" doc:id="e83e0d20-db65-4068-b2e9-4869fdb004f4">
+				<when expression="#[vars.valid == true and ( mod(vars.counter as Number, 5) == 0 )]">
+					<ee:transform doc:name="Transform Message" doc:id="e0e17976-4fdf-4959-bcb3-6ef5cf9ae42b">
+						<ee:message>
+						</ee:message>
+						<ee:variables >
+							<ee:set-variable variableName="cardRecords" ><![CDATA[%dw 2.0
+output application/java
+---
+vars.cardRecords ++ [payload]]]></ee:set-variable>
+						</ee:variables>
+					</ee:transform>
+					<choice doc:name="Choice" doc:id="23d9be29-70a1-4390-afa9-019137bbfeea" >
+						<when expression="#[sizeOf(vars.cardRecords) == 1000]">
+							<ee:transform doc:name="Transform Message" doc:id="728eb990-8082-4470-87c4-1c2fc4d9620e">
+								<ee:message>
+									<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+vars.cardRecords]]></ee:set-payload>
+								</ee:message>
+							</ee:transform>
+							<logger level="INFO" doc:name="Logger" doc:id="fbe28f1d-0ea0-42b4-9396-ee7035dd7975" message='#["going to write card records. record number  is " ++ vars.counter]' />
+							<flow-ref doc:name="Flow Reference" doc:id="c7a038aa-c132-40a5-b615-f7eee4058b09" name="writeToFile"/>
+							<ee:transform doc:name="reset" doc:id="40337faf-1143-402b-a655-eb80e3522137" >
+								<ee:message >
+								</ee:message>
+								<ee:variables >
+									<ee:set-variable variableName="cardRecords" ><![CDATA[%dw 2.0
+output application/java
+---
+[]]]></ee:set-variable>
+								</ee:variables>
+							</ee:transform>
+						</when>
+					</choice>
+				</when>
+			</choice>
+		</foreach>
+		<logger level="INFO" doc:name="Process completed" doc:id="045ef4ab-e432-4e3c-bd8c-12b8112e211a" message="Process completed"/>
+		<choice doc:name="Choice" doc:id="2c5c17cd-5018-4fe5-bf8f-970df8ee6c15" >
+			<when expression="#[sizeOf(vars.cardRecords) &gt; 0]" >
+				<ee:transform doc:name="Transform Message" doc:id="d3bab998-5533-422a-8dcb-022f63900cb0">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+vars.cardRecords]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<flow-ref doc:name="writeFile" doc:id="c94562c2-e0fe-412a-ad0e-9d596a8c971c" name="writeToFile"/>
+			</when>
+		</choice>
+	
+</flow>
+	<flow name="writeToFile" doc:id="14f762e3-1e62-45d9-b77b-cd3ef7c553cb" >
+		<file:write doc:name="result csv file" doc:id="cea5cfb4-290b-4c2c-b3fe-bb607fe4996d" config-ref="File_Config" path="#[vars.outputFilePath]" mode="APPEND" >
+			<file:content ><![CDATA[#[output application/csv header=false --- payload]]]></file:content>
+		</file:write>
+	</flow>
+	
+	<flow name="processCardsInSequenceSimple" doc:id="ed1f8ec6-e90d-4b65-9606-5b8cbeaf42ce" initialState="stopped">
+		<scheduler doc:name="Schedule Process" doc:id="52fee3e5-e043-4417-8e2e-e4126037f7eb" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="14400" timeUnit="SECONDS" startDelay="5"/>
+			</scheduling-strategy>
+		</scheduler>
+		<logger level="INFO" doc:name="Before reading file" doc:id="3bc4253a-3309-4082-b3db-c772e0ce0fa2" message="Before reading file"/>
+		<file:read doc:name="card file" doc:id="bbc0e0f8-78bf-40d9-a9ec-18fd9f13c506" config-ref="File_Config" path="#[p('file.inputDir') ++ p('file.name')]" outputMimeType="application/csv; streaming=true; header=true" >
+			<ee:repeatable-file-store-stream inMemorySize="64" />
+		</file:read>
+		<logger level="INFO" doc:name="Process started" doc:id="97fb0f39-5dbd-4cbd-992d-84cf0cb779db" message="Process started" />
+		<set-variable value="#[p('file.outputDir') ++ (attributes.fileName  replace &quot;.csv&quot; with(&quot;.csv&quot;))]" doc:name="outputFilePath" doc:id="469086e4-7d2a-4a43-9c52-5fc7123e7d0b" variableName="outputFilePath"/>
+		<logger level="INFO" doc:name="Logger" doc:id="16444838-af9b-43c3-9ffb-080dcd5df0c5" message="transformed to iterator"/>
+		<set-variable value="#[[]]" doc:name="cardRecords" doc:id="0aa3cb7a-c772-4d21-bd55-63d39975fdd4" variableName="cardRecords"/>
+		<ee:transform doc:name="Transform Message" doc:id="ee1f30be-dcf5-4150-bbd3-a10acee21932" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload as Iterator]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="f24daed2-38a2-4491-abba-22a649d5226e">
+			<ee:transform doc:name="valid record" doc:id="b5e56767-3888-42b7-9d17-feb4f9a6d295">
+			<ee:message>
+			</ee:message>
+			<ee:variables>
+				<ee:set-variable variableName="valid"><![CDATA[%dw 2.0
+output application/java
+---
+
+if (( mod(payload.card_no as Number,10) == 0 ) 
+	and ( mod(payload.amount_granted as Number,30) == 0 ) 
+	and (isOdd(payload.processor_id))
+)	
+	true	
+else
+	false]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+			<choice doc:name="Choice" doc:id="95d4ec11-3643-4882-9eb1-6c769d2b00e5">
+				<when expression="#[vars.valid == true and ( mod(vars.counter as Number, 5) == 0 )]">
+					<ee:transform doc:name="Transform Message" doc:id="95b50aa7-6e4b-422f-8f47-9b62208fa128">
+						<ee:message>
+						</ee:message>
+						<ee:variables >
+							<ee:set-variable variableName="cardRecords" ><![CDATA[%dw 2.0
+output application/java
+---
+vars.cardRecords ++ [payload]]]></ee:set-variable>
+						</ee:variables>
+					</ee:transform>
+					<choice doc:name="Choice" doc:id="ff34d3c1-f4b0-4900-87b1-e927b49b8ea6" >
+						<when expression="#[sizeOf(vars.cardRecords) == 5000]">
+							<ee:transform doc:name="Transform Message" doc:id="8006ac88-0061-4d4d-b0c7-1186d77fe6e6">
+								<ee:message>
+									<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+vars.cardRecords]]></ee:set-payload>
+								</ee:message>
+							</ee:transform>
+							<logger level="INFO" doc:name="Logger" doc:id="722390e2-1c8c-49cc-8fb8-1224964ae19f" message='#["going to write card records. record number  is " ++ vars.counter]' />
+							<flow-ref doc:name="Flow Reference" doc:id="76df16ca-1c70-471c-898a-3d3116131567" name="writeToFile"/>
+							<ee:transform doc:name="reset" doc:id="5d091023-4b07-4cb8-a4cd-e6d380270fb6" >
+								<ee:message >
+								</ee:message>
+								<ee:variables >
+									<ee:set-variable variableName="cardRecords" ><![CDATA[%dw 2.0
+output application/java
+---
+[]]]></ee:set-variable>
+								</ee:variables>
+							</ee:transform>
+						</when>
+					
+</choice>
+				</when>
+			
+</choice>
+		
+</foreach>
+		<choice doc:name="Choice" doc:id="32b58045-99bb-472a-9b1e-1220e0dfdf18" >
+			<when expression="#[sizeOf(vars.cardRecords) &gt; 0]" >
+				<ee:transform doc:name="Transform Message" doc:id="fdea82eb-6ec9-4f0f-b482-dd25145657a9">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/java
+---
+vars.cardRecords]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<logger level="INFO" doc:name="Logger" doc:id="bad98950-7e61-4cbd-8332-e7a85c5f2e5e" message='#["Final batch of " ++ sizeOf(payload) ++ " records will be written to the file."]'/>
+				<flow-ref doc:name="writeFile" doc:id="8bde572f-d741-4019-af35-07b912594f2d" name="writeToFile"/>
+			
+</when>
+		
+</choice>
+		<logger level="INFO" doc:name="Process completed" doc:id="8f19becd-8ff8-4b33-88a8-201ec1f6d403" message="Process completed" />
+	
+
+</flow>
+</mule>

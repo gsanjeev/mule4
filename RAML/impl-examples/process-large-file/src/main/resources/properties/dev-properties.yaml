@@ -1,0 +1,7 @@
+file:
+  workingDir: "F:/tmp/mule/file-connector/largefiles/resources/"
+  name: "largefilebatch-AK494SD.csv"
+  nameTest: "filebatch-AK494SD.csv"
+  workingDirTest: "F:/tmp/mule/file-connector/giftcards/resources/"
+  inputDir: "input/"
+  outputDir: "output/"
