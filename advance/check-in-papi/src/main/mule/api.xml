@@ -36,7 +36,7 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 				<ee:set-variable variableName="PNR" ><![CDATA[attributes.uriParams.'PNR']]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<flow-ref doc:name="Flow Reference" doc:id="5854cfe5-d1c0-43dd-85e3-32cd5321d55b" name="check-in-by-pnr" />
+		<flow-ref doc:name="check-in-by-pnr" doc:id="5854cfe5-d1c0-43dd-85e3-32cd5321d55b" name="check-in-by-pnr" />
     </flow>
     <flow name="put:\tickets\(PNR)\paymentApproval:application\json:apiConfig">
 		<ee:transform doc:name="Transform Message" doc:id="deafc247-d495-474a-8f56-b2b0ad0bc52d" >
@@ -46,6 +46,6 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 				<ee:set-variable variableName="PNR" ><![CDATA[attributes.uriParams.'PNR']]></ee:set-variable>
 			</ee:variables>
 		</ee:transform>
-		<flow-ref doc:name="Flow Reference" doc:id="972bf683-008f-4487-b4f6-f1ee319d64ef" name="payment-approvalby-pnr" />
+		<flow-ref doc:name="payment-approvalby-pnr" doc:id="972bf683-008f-4487-b4f6-f1ee319d64ef" name="payment-approvalby-pnr" />
     </flow>
 </mule>

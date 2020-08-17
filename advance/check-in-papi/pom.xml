@@ -17,20 +17,23 @@
 	<name>check-in-papi</name>
 
     <properties>
-	
-		<api.groupId>51c492e6-db33-40b0-baba-45b71ba212af</api.groupId> 
+        <api.groupId>51c492e6-db33-40b0-baba-45b71ba212af</api.groupId>
 		<api.artifactId>check-in-papi</api.artifactId> 
 		<api.version>1.0.0</api.version>
 		<api.layer>${api.layer.papi}</api.layer>
-	</properties>
+		<app.runtime>4.3.0</app.runtime>
+    </properties>
 
 	<build>
 		<plugins>
 			<plugin>
 				<groupId>org.mule.tools.maven</groupId>
 				<artifactId>mule-maven-plugin</artifactId>
-			</plugin>			
-             <plugin>
+				<configuration>
+                    <classifier>mule-application</classifier>
+                </configuration>
+            </plugin>			
+             <plugin>             
                 <groupId>com.mulesoft.munit.tools</groupId>
                 <artifactId>munit-maven-plugin</artifactId>
             </plugin>             
@@ -40,7 +43,7 @@
 	<dependencies>
 
 		<dependency>
-            <groupId>${api.groupId}</groupId>
+             <groupId>${api.groupId}</groupId>
             <artifactId>${api.artifactId}</artifactId>
             <version>${api.version}</version>
             <classifier>oas</classifier>
