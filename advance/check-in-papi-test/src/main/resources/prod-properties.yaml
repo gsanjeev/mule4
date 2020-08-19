@@ -1,0 +1,13 @@
+api: 
+  id:           "16316040"
+  port:         "8082"
+
+logger:
+  prettyPrint: "true"
+
+tls.keystore:
+  type:        "pkcs12"
+  path:        "certs/check-in-papi.p12"
+  alias:       "server"
+  password: "mule12345"
+  keyPassword: "mule12345"
