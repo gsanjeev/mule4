@@ -19,12 +19,12 @@
 		 <!-- MuleSoft Service Exchange Maven repo -->
         <mssvcs.ap.orgid>cc568b69-a181-4d4c-b044-90054c52897b</mssvcs.ap.orgid>
         <mssvcs.exchange.repo.id>anypoint-exchange-${mssvcs.ap.orgid}</mssvcs.exchange.repo.id>
-        <app.runtime.semver>4.2.2</app.runtime.semver>
-        <app.runtime>${app.runtime.semver}</app.runtime>
+        <app.runtime.server>4.3.0</app.runtime.server>
+        <app.runtime>${app.runtime.server}</app.runtime>
 		<mule.maven.plugin.version>3.3.5</mule.maven.plugin.version>
-		<http.connector.version>1.5.11</http.connector.version>
-		<apikit.version>1.3.7</apikit.version>
-		<secure.conf.prop.module.version>1.2.1</secure.conf.prop.module.version>
+		<http.connector.version>1.5.19</http.connector.version>
+		<apikit.version>1.3.13</apikit.version>
+		<secure.conf.prop.module.version>1.2.3</secure.conf.prop.module.version>
 		<munit.version>2.2.3</munit.version>
 	</properties>
 
@@ -103,7 +103,7 @@
  <repositories>
  	<repository>
  	    <!-- check-in-papi requires authentication -->
- 	    <id>anypoint-exchange-51c492e6-db33-40b0-baba-45b71ba212af</id>
+ 	    <id>anypoint-exchange-46c9c04b-8873-41da-841d-9950b914511b</id>
  	    <name>MuleSoft Services Anypoint Exchange</name>
  	    <url>https://maven.anypoint.mulesoft.com/api/v2/maven</url>
  	    <layout>default</layout>

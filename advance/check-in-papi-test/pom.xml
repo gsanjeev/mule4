@@ -3,11 +3,11 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.mycompany</groupId>
-	<artifactId>check-in-papi-test</artifactId>
+	<artifactId>check-in-papi-no-parent-poms</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>mule-application</packaging>
 
-	<name>check-in-papi-test</name>
+	<name>check-in-papi</name>
 
     <properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -20,6 +20,18 @@
 		<api.groupId>46c9c04b-8873-41da-841d-9950b914511b</api.groupId>
 		<api.artifactId>check-in-papi</api.artifactId> 
 		<api.version>1.0.0</api.version>
+		
+		<!-- for automated deployments -->
+        <deployment.env>set with -Ddeployment.env=...</deployment.env>
+        <deployment.prefix>st-</deployment.prefix>
+        <deployment.suffix>-${deployment.env}</deployment.suffix>
+        <!-- <deployment.name>${deployment.prefix}${project.artifactId}${deployment.suffix}</deployment.name> 
+        this need to be uncommented when project.artifactId is equal to check-in-papi . Delete target once directory before deploying to cloudhub-->
+        <deployment.name>${deployment.prefix}${project.name}${deployment.suffix}</deployment.name>
+        <!-- requires AP environments to have the same name as the env property value in Mule apps (which determines the property files to load) -->
+        <ap.environment>${deployment.env}</ap.environment>
+        <!-- set encrypt.key for decrypting secure (encryped) properties files (but don't set it here!) -->
+        
 	</properties>
 
 	<build>
@@ -66,13 +78,13 @@
 				<configuration>
 				  <cloudHubDeployment>
 				  <server>cloudhub</server>
-				  <environment>prod</environment>
+				  <environment>${ap.environment}</environment>
 				  <region>us-east-2</region>
 				  <muleVersion>4.3.0</muleVersion>
 				  <workers>1</workers>
 				  <workerType>MICRO</workerType>
 				  <objectStoreV2>true</objectStoreV2>
-				  <applicationName>st-check-in-papi</applicationName>
+				  <applicationName>${deployment.name}</applicationName>
 				  <deploymentTimeout>600000</deploymentTimeout>
 				  <properties>
 				  	<anypoint.platform.client_id>
@@ -81,6 +93,8 @@
 				 	<anypoint.platform.client_secret>
 				 		${ap.client_secret}
 				 	</anypoint.platform.client_secret>
+				 	<env>${deployment.env}</env>
+				    <encrypt.key>${encrypt.key}</encrypt.key>
 				 </properties>
 				 </cloudHubDeployment> 
 				</configuration>
@@ -112,6 +126,12 @@
             <groupId>org.mule.modules</groupId>
             <artifactId>mule-apikit-module</artifactId>
             <version>1.3.13</version>
+            <classifier>mule-plugin</classifier>
+        </dependency>
+    	<dependency>
+            <groupId>com.mulesoft.modules</groupId>
+            <artifactId>mule-secure-configuration-property-module</artifactId>
+            <version>1.2.3</version>
             <classifier>mule-plugin</classifier>
         </dependency>
     </dependencies>
