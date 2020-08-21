@@ -3,7 +3,7 @@ api:
   port:         "8082"
 
 logger:
-  prettyPrint: "true"
+  prettyPrint: "false"
 
 tls.keystore:
   type:        "pkcs12"
