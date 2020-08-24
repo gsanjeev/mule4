@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<domain:mule-domain
+xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties"
+	xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
+	        xmlns:http="http://www.mulesoft.org/schema/mule/http"
+        xmlns="http://www.mulesoft.org/schema/mule/core"
+        xmlns:domain="http://www.mulesoft.org/schema/mule/ee/domain"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
+               http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+               http://www.mulesoft.org/schema/mule/ee/domain http://www.mulesoft.org/schema/mule/ee/domain/current/mule-domain-ee.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd">
+
+    <!-- configure here resource to be shared within the domain -->
+    <http:listener-config name="apiHttpListenerConfig">
+    	<http:listener-connection host="0.0.0.0" port="${api.port}" protocol="HTTPS" tlsContext="apiTLSContext"/>
+    </http:listener-config>
+    <tls:context name="apiTLSContext" doc:name="TLS Context" doc:id="3002f22d-cfd8-4351-ba52-7f6b6edaba82" >
+		<tls:key-store path="${tls.keystore.path}" alias="${tls.keystore.alias}" keyPassword="${secure::tls.keystore.keyPassword}" password="${secure::tls.keystore.password}" type="${tls.keystore.type}"/>
+	</tls:context>
+	<global-property doc:name="Global Property" doc:id="e3876671-ee2d-4161-b4cd-cb66a28ab0ed" name="env" value="dev" />
+	<configuration-properties doc:name="Configuration properties" doc:id="5ca0e9de-59d3-495a-87ab-35491f83ff68" file="${env}-domain-properties.yaml" />
+	<configuration-properties doc:name="Configuration properties" doc:id="bf3f7a36-e2c1-4389-bf46-f6e0fbcbab46" file="domain-properties.yaml" />
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="a4bc857e-4e2e-4f1a-961c-9e3540854d3d" file="${env}-domain-secure-properties.yaml" key="${encrypt.key}" >
+		<secure-properties:encrypt algorithm="Blowfish" />
+	</secure-properties:config>
+</domain:mule-domain>

@@ -1,0 +1,5 @@
+tls.keystore:
+  type:        "pkcs12"
+  #path:        "certs/${project.artifactId}-dev.p12" # replaced through Maven resource filtering
+  path:        "certs/check-in-papi-npps-wd-dev.p12"
+  alias:       "server"

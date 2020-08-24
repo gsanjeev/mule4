@@ -1,0 +1,11 @@
+api: 
+  groupId:      "${api.groupId}" 
+  artifactId:   "${api.artifactId}" 
+  version:      "${api.version}"  
+  spec:         "resource::${api.groupId}:${api.artifactId}:${api.version}:oas:zip:check-in-papi.json"
+  majorVersion: "v1"
+  rootPath: "/${project.artifactId}"
+  
+app:
+  name:    ${project.artifactId}
+  version: ${project.version}
