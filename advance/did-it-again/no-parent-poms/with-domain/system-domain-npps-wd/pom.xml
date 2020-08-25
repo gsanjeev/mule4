@@ -28,6 +28,20 @@
     </properties>
 
     <build>
+		<resources>
+     		<resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+               <!-- and must exclude some file types from filtering in maven-resources-plugin config below -->
+            </resource>
+        </resources>
+        <testResources>
+            <testResource>
+                <directory>src/test/resources</directory>
+                <filtering>true</filtering>
+               <!-- and must exclude some file types from filtering in maven-resources-plugin config below -->
+            </testResource>
+        </testResources>    
         <plugins>
             <plugin>
                 <groupId>org.mule.tools.maven</groupId>

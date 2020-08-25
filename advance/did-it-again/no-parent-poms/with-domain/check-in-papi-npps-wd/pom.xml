@@ -44,8 +44,8 @@
 	</properties>
 
 	<build>
-	<resources>
-     <resource>
+		<resources>
+     		<resource>
                 <directory>src/main/resources</directory>
                 <filtering>true</filtering>
                <!-- and must exclude some file types from filtering in maven-resources-plugin config below -->
@@ -57,8 +57,7 @@
                 <filtering>true</filtering>
                <!-- and must exclude some file types from filtering in maven-resources-plugin config below -->
             </testResource>
-        </testResources>
-	
+        </testResources>	
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -77,8 +76,7 @@
                           <nonFilteredFileExtension>pem</nonFilteredFileExtension>
                       </nonFilteredFileExtensions>
                   </configuration>
-            </plugin> 
-			
+            </plugin>			
 			<plugin>
 				<groupId>org.mule.tools.maven</groupId>
 				<artifactId>mule-maven-plugin</artifactId>
@@ -112,7 +110,6 @@
 	</build>
 
 	<dependencies>
-
 		<dependency>
             <groupId>46c9c04b-8873-41da-841d-9950b914511b</groupId>
             <artifactId>check-in-papi</artifactId>
