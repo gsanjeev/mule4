@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:munit="http://www.mulesoft.org/schema/mule/munit"
+	xmlns:munit-tools="http://www.mulesoft.org/schema/mule/munit-tools"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xsi:schemaLocation="
+		http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+		http://www.mulesoft.org/schema/mule/munit http://www.mulesoft.org/schema/mule/munit/current/mule-munit.xsd
+		http://www.mulesoft.org/schema/mule/munit-tools  http://www.mulesoft.org/schema/mule/munit-tools/current/mule-munit-tools.xsd">
+	<munit:config name="main-test-suite.xml" />
+
+	<!-- <munit:test name="start-up-test" description="test deployment and startup."> 
+		<munit:execution> <logger /> </munit:execution> </munit:test> -->
+
+	<sub-flow name="verify-all-mocks-are-called-once"
+		doc:id="b5198834-f657-4473-bee3-7f4bd629aa49">
+		<munit-tools:verify-call times="1" processor="flow-ref">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute attributeName="name" whereValue="check-in-flights-management" />
+				</munit-tools:with-attributes>
+			</munit-tools:verify-call>
+		<munit-tools:verify-call times="1" processor="flow-ref">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute attributeName="name" whereValue="register-passenger-data" />
+				</munit-tools:with-attributes>
+			</munit-tools:verify-call>
+		<munit-tools:verify-call times="1" processor="flow-ref">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute attributeName="name" whereValue="create-payment-for-bags" />
+				</munit-tools:with-attributes>
+			</munit-tools:verify-call>
+	</sub-flow>
+	<sub-flow name="set-check-in-event" doc:id="67cc89a1-6ea1-4b1b-8a53-3c0cdf4eb6bd" >
+		<munit:set-event>
+				<munit:payload value="#[output application/json --- TestData::checkIn]" />
+				<munit:variables>
+					<munit:variable key="PNR" value="#[TestData::pnr]" />
+				</munit:variables>
+			</munit:set-event>
+	</sub-flow>
+	<sub-flow name="spy-all-mocks" doc:id="e8a72761-b6f0-44a4-9283-79a2904dbe9d" >
+		<munit-tools:spy processor="flow-ref">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute attributeName="name" whereValue="create-payment-for-bags" />
+				</munit-tools:with-attributes>
+				<munit-tools:before-call>
+					<munit-tools:assert-that expression="#[vars.checkIn]" is="#[MunitTools::equalTo(TestData::checkIn)]" />
+				</munit-tools:before-call>
+			</munit-tools:spy>
+	</sub-flow>
+	<sub-flow name="setup-happy-sapi-mocks" doc:id="c5d19fa1-5619-467f-b11c-37c67d30b5cf" >
+		<munit-tools:mock-when processor="flow-ref">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute attributeName="name" whereValue="check-in-flights-management" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload value="#[output application/json --- {}]" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		<munit-tools:mock-when processor="flow-ref">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute attributeName="name" whereValue="register-passenger-data" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload value="#[output application/json --- {}]" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+		<munit-tools:mock-when processor="flow-ref">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute attributeName="name" whereValue="create-payment-for-bags" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:payload value="#[output application/json --- {}]" />
+				</munit-tools:then-return>
+		</munit-tools:mock-when>
+	</sub-flow>
+	<munit:test name="check-in-by-pnr-happy-path-test"
+		doc:id="a27a9104-7c94-4cc6-83bb-f9c0b019f699" description="Test">
+		<munit:behavior>
+			<flow-ref doc:name="setup-happy-sapi-mocks" doc:id="f20ce5b4-bf2b-4195-90ea-24063ed0c37d" name="setup-happy-sapi-mocks" />
+			<flow-ref doc:name="spy-all-mocks" doc:id="968ad280-110c-4f67-9d43-bcda730cacca" name="spy-all-mocks" />
+			<flow-ref doc:name="set-check-in-event" doc:id="82e6f0e9-f0f6-4cf6-9e07-92ae5597ea83" name="set-check-in-event" />		
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref doc:name="Flow-ref to check-in-by-pnr"
+				doc:id="c0274b6c-2c07-4052-832a-b05d23a709da" name="check-in-by-pnr" />
+		</munit:execution>
+		<munit:validation>
+			<flow-ref doc:name="verify-all-mocks-are-called-once" doc:id="8e5640ee-cd84-489a-b3b8-cf2e6b1ca739" name="verify-all-mocks-are-called-once" />
+			<munit-tools:assert-that expression="#[payload]" is="#[MunitTools::equalTo(TestData::checkInByPNRResp)]" />
+		</munit:validation>	
+	</munit:test>
+	<munit:test
+		name="main-test-suite-payment-approvalby-pnrTest"
+		doc:id="41b6330a-9add-4104-bf55-cd87131fc492" description="Test">
+		<munit:execution>
+			<flow-ref doc:name="Flow-ref to payment-approvalby-pnr"
+				doc:id="a7ce6267-bf94-48e8-a578-85cfb4539bfb"
+				name="payment-approvalby-pnr" />
+		</munit:execution>
+	</munit:test>
+	<munit:test name="check-in-by-pnr-exception-path-test"
+		expectedErrorType="APP:CANT_CREATE_PAYMENT">
+		<munit:behavior>
+			<flow-ref name="setup-happy-sapi-mocks" />
+			<munit-tools:mock-when processor="flow-ref">
+				<munit-tools:with-attributes>
+					<munit-tools:with-attribute
+						attributeName="name" whereValue="create-payment-for-bags" />
+				</munit-tools:with-attributes>
+				<munit-tools:then-return>
+					<munit-tools:error
+						typeId="APP:CANT_CREATE_PAYMENT" />
+				</munit-tools:then-return>
+			</munit-tools:mock-when>
+			<flow-ref name="set-check-in-event" />
+		</munit:behavior>
+		<munit:execution>
+			<flow-ref name="check-in-by-pnr" />
+		</munit:execution>
+	</munit:test>
+</mule>

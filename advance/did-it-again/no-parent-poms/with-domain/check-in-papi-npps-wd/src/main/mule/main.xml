@@ -14,6 +14,10 @@ http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/m
  	attributes: attributes
 }]]]></json-logger:content>
 		</json-logger:logger>
+		<set-variable variableName="checkIn" value="#[payload]" />
+ 		<flow-ref name="check-in-flights-management" />
+ 		<flow-ref name="register-passenger-data" />
+		<flow-ref name="create-payment-for-bags" />		
 		<ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
@@ -52,6 +56,19 @@ output application/json
 		<json-logger:logger doc:name="Logger" doc:id="ca852335-b653-4603-bbe6-cecf6e651d9f" config-ref="jsonLoggerConfig" message="Approving payment by PNR" tracePoint="END"/>
 	</flow>
 
-	
+	 <flow name="check-in-flights-management">
+	 	<logger />
+	 </flow>
+	 <flow name="register-passenger-data">
+	 	<logger />
+	 </flow>
+	<flow name="create-payment-for-bags">
+		<logger />
+		<error-handler>
+			<on-error-continue>
+				<raise-error type="APP:CANT_CREATE_PAYMENT" />
+			</on-error-continue>
+		</error-handler>
+	</flow>	
 	
 	</mule>
