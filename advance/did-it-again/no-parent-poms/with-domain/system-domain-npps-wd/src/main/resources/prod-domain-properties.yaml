@@ -1,4 +1,4 @@
 tls.keystore:
   type:        "pkcs12"
-  path:        "certs/check-in-papi-npps-wd-prod.p12" # replaced through Maven resource filtering
+  path:        "certs/check-in-papi-npps-wd.p12" # replaced through Maven resource filtering
   alias:       "server"

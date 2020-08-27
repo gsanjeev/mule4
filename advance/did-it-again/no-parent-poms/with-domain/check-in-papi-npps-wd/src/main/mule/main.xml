@@ -31,7 +31,14 @@ output application/json
 		<json-logger:logger doc:name="Logger" doc:id="33b92ca2-f5b2-4902-8191-4c831c7e6e9c" config-ref="jsonLoggerConfig" message="Checking-in by PNR" tracePoint="END"/>
 	</flow>
 	<flow name="payment-approvalby-pnr" doc:id="19adabf6-454f-4c49-bc62-fef974315a48">
-		<json-logger:logger doc:name="Logger" doc:id="178de380-21b1-46fb-880d-7d5bdbb925ee" config-ref="jsonLoggerConfig" message="Approving payment by PNR"/>
+		<json-logger:logger doc:name="Logger" doc:id="178de380-21b1-46fb-880d-7d5bdbb925ee" config-ref="jsonLoggerConfig" message="Approving payment by PNR">
+			<json-logger:content ><![CDATA[#[output application/json ---
+{
+	pnr: vars.PNR, 
+ 	payload: payload,
+ 	attributes: attributes
+}]]]></json-logger:content>
+		</json-logger:logger>
 		<ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0

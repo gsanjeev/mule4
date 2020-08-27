@@ -42,11 +42,11 @@
 				<version>${munit.version}</version>
 			</plugin>			
 		    <!-- allow resource files to contain references to Maven properties like ${prop.name} -->
-             <plugin>
-                 <groupId>org.apache.maven.plugins</groupId>
-                 <artifactId>maven-resources-plugin</artifactId>
-                 <version>${resources.plugin.version}</version> 
-             </plugin>                
+			     <plugin>
+				 <groupId>org.apache.maven.plugins</groupId>
+				 <artifactId>maven-resources-plugin</artifactId>
+				 <version>${resources.plugin.version}</version> 
+			     </plugin>                
 		</plugins>
 		</pluginManagement>
 	</build>

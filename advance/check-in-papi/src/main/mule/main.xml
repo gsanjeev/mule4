@@ -5,15 +5,19 @@
 	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
 http://www.mulesoft.org/schema/mule/json-logger http://www.mulesoft.org/schema/mule/json-logger/current/mule-json-logger.xsd">
-	<flow name="check-in-by-pnr" doc:id="d4c92a55-4d87-4649-9bd2-3a6df70f375f">
-		<json-logger:logger doc:name="Logger" doc:id="7b2b021c-b970-4db3-994c-0fa38730bb8f" config-ref="jlogConfig" message="Checking-in by PNR">
-			<json-logger:content><![CDATA[#[output application/json ---
+	<flow name="check-in-by-pnr" doc:id="8f338c11-c178-4adc-9f5f-babd9e870e1e" >
+		<json-logger:logger doc:name="Logger" doc:id="d9e94273-582c-4fc2-bd51-39bea5f10dfc" config-ref="jlogConfig" message="Checking-in by PNR">
+			<json-logger:content ><![CDATA[#[output application/json ---
 {
 	pnr: vars.PNR,
  	payload: payload,
  	attributes: attributes
 }]]]></json-logger:content>
 		</json-logger:logger>
+		<set-variable variableName="checkIn" value="#[payload]" />
+ 		<flow-ref name="check-in-flights-management" />
+ 		<flow-ref name="register-passenger-data" />
+		<flow-ref name="create-payment-for-bags" />		
 		<ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
@@ -24,10 +28,10 @@ output application/json
 }]]></ee:set-payload>
             </ee:message>
         </ee:transform>
-		<json-logger:logger doc:name="Logger" doc:id="bfe15e43-2fef-4a07-a0f0-260424de734e" tracePoint="END" message="Checking-in by PNR" config-ref="jlogConfig" />
+		<json-logger:logger doc:name="Logger" doc:id="33b92ca2-f5b2-4902-8191-4c831c7e6e9c" config-ref="jlogConfig" message="Checking-in by PNR" tracePoint="END"/>
 	</flow>
-	<flow name="payment-approvalby-pnr" doc:id="17d6d5e9-cc17-4868-a9d5-ab9cb13cab9f" >
-		<json-logger:logger doc:name="Logger" doc:id="b60fbf50-a178-43e1-a297-fc8b568e835e" config-ref="jlogConfig" message="Approving payment by PNR">
+	<flow name="payment-approvalby-pnr" doc:id="19adabf6-454f-4c49-bc62-fef974315a48">
+		<json-logger:logger doc:name="Logger" doc:id="178de380-21b1-46fb-880d-7d5bdbb925ee" config-ref="jlogConfig" message="Approving payment by PNR">
 			<json-logger:content ><![CDATA[#[output application/json ---
 {
 	pnr: vars.PNR, 
@@ -56,7 +60,22 @@ output application/json
 }]]></ee:set-payload>
             </ee:message>
         </ee:transform>
-		<json-logger:logger doc:name="Logger" doc:id="f36120ef-43df-47b2-9edb-4e4f30774b0f" config-ref="jlogConfig" message="Approving payment by PNR" tracePoint="END">
-		</json-logger:logger>
+		<json-logger:logger doc:name="Logger" doc:id="ca852335-b653-4603-bbe6-cecf6e651d9f" config-ref="jlogConfig" message="Approving payment by PNR" tracePoint="END"/>
 	</flow>
-</mule>
+
+	 <flow name="check-in-flights-management">
+	 	<logger />
+	 </flow>
+	 <flow name="register-passenger-data">
+	 	<logger />
+	 </flow>
+	<flow name="create-payment-for-bags">
+		<logger />
+		<error-handler>
+			<on-error-continue>
+				<raise-error type="APP:CANT_CREATE_PAYMENT" />
+			</on-error-continue>
+		</error-handler>
+	</flow>	
+	
+	</mule>
