@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+	<file:config name="atchementFileConfig" doc:name="File Config" doc:id="ac99a3a5-a6ea-4ca9-a30c-a78e3acfd69c" >
+		<file:connection workingDir="F:/tmp/mule/attachement/output" />
+	</file:config>	
+	<flow name="process-file" doc:id="f6e484e2-d2be-4442-8122-72cd6b279231" >
+		<ee:transform doc:name="Transform Message" doc:id="df46b39a-c9e1-4d56-a29d-0134875aae6e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+input payload multipart/form-data
+---
+payload.parts.'FILE-ATTACH'.content]]></ee:set-payload>
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="fileName" ><![CDATA[%dw 2.0
+output application/java
+input payload multipart/form-data
+---
+payload.parts.'FILE-ATTACH'.headers.'Content-Disposition'.filename]]></ee:set-variable>
+				<ee:set-variable variableName="jsonFileContent" ><![CDATA[%dw 2.0
+output application/java
+input payload multipart/form-data
+---
+payload.parts.'jsonfile'.content]]></ee:set-variable>
+				<ee:set-variable variableName="jsonFileName" ><![CDATA[output application/java
+input payload multipart/form-data
+---
+payload.parts.'jsonfile'.headers.'Content-Disposition'.filename]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+		<file:write doc:name="write attach file" doc:id="8bce25d6-17fc-4078-9dc8-312f563ab5fe" config-ref="atchementFileConfig" path="#[vars.fileName]"/>
+		<file:write doc:name="write attach json file" doc:id="cfde67f8-aea4-4e5c-9787-835e8194f813" config-ref="atchementFileConfig" path="#[vars.jsonFileName]" >
+			<file:content ><![CDATA[#[output application/json --- vars.jsonFileContent]]]></file:content>
+		</file:write>
+		<ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+            <ee:message>
+                <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+  message: "files " ++ vars.fileName ++ " and " ++ vars.jsonFileName ++ " uploaded successfully."
+}]]></ee:set-payload>
+            </ee:message>
+        </ee:transform>
+	</flow>
+</mule>

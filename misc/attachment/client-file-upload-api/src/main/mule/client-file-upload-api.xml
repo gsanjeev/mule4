@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="003ddcd5-e91e-499f-8d4d-968dbfb11953" >
+		<http:listener-connection host="0.0.0.0" port="8085" />
+	</http:listener-config>
+	<file:config name="atchementFileConfig" doc:name="File Config" doc:id="8dc4fd2d-d12a-49b2-8bf6-2d71a686128d" >
+		<file:connection workingDir="F:/tmp/mule/attachement/input" />
+	</file:config>	
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="0e7f6449-5ac1-403d-b715-03236392c607" basePath="/api/" >
+		<http:request-connection host="localhost" port="8081" />
+	</http:request-config>
+	<flow name="client-file-upload-apiFlow" doc:id="6609cfa6-c00d-45d8-9464-6c32e5e8d6eb" >
+		<http:listener doc:name="Listener" doc:id="6c67f22e-a6df-40fc-a479-de91c7df74b2" config-ref="HTTP_Listener_config" path="/test"/>
+		<file:read doc:name="Read" doc:id="cabc2de7-d15f-45f5-8d04-5f6ef5063f8b" config-ref="atchementFileConfig" path="check-in-papi.txt"/>
+		<ee:transform doc:name="Transform Message" doc:id="de397988-6e9e-45de-8dfe-e32b29bfb9fc" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output multipart/form-data
+---
+{
+	parts: {
+		"FILE-ATTACH" : {
+			headers : {
+				"Content-Disposition" : {
+					"name" : "FILE-ATTACH",
+					"filename" : "filename.txt"
+				},
+				"Content-Type" : payload.^mimeType
+				},
+				content : payload
+		},
+		"jsonfile" : {
+		      headers : {
+		        "Content-Disposition" : {
+		            "name": "jsonfile",
+		            "filename": "sample.json"
+		        },
+		        "Content-Type" : "application/json"
+		      },
+		      content : {
+		        Name: "John Doe",
+		        "R-ID": "1234",
+		        "A-Number": "01"
+		      }
+    	}
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<http:request method="POST" doc:name="Request" doc:id="95830da0-e42a-4b9e-9a9c-de87386451d8" config-ref="HTTP_Request_configuration" path="uploadFile"/>
+	</flow>
+</mule>

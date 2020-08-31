@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd">
+	<flow name="single-run-flow-at-startup" doc:id="45fe6b9a-2431-4e76-bbdf-4d9d4d861ce2" >
+		<scheduler doc:name="Scheduler" doc:id="3cfb1e3f-1b07-4dd8-b59b-da16dacc12dc" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="100000" timeUnit="DAYS"/>
+			</scheduling-strategy>
+		</scheduler>
+		<logger level="INFO" doc:name="register callback" doc:id="47ef6f81-42f9-4547-9cc6-fd6e7c093414" message="Register HTTP POST callback url."/>
+		<scripting:execute engine="Groovy" doc:name="Execute" doc:id="614e065b-ab51-420a-9e35-5a8ddac1141f" >
+			<scripting:code ><![CDATA[flow = registry.lookupByName("single-run-flow-at-startup").get();
+if (flow.isStarted())
+  flow.stop()]]></scripting:code>
+		</scripting:execute>
+	</flow>
+
+	
+</mule>

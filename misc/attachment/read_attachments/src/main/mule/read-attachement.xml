@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="httpListenerConfig" doc:name="HTTP Listener config" doc:id="82e88fc2-9b4e-4e34-a668-1b96956ce5ec" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<file:config name="atchementFileConfig" doc:name="File Config" doc:id="75fddd48-5943-4d3f-9765-028339f72abd" >
+		<file:connection workingDir="F:/tmp/mule/attachement/output" />
+	</file:config>
+	<flow name="read-attachement" doc:id="8b2a1f7f-2975-4d50-a66a-d0095b6404ec" >
+		<http:listener doc:name="Listener" doc:id="981780a6-033e-4b30-ac3a-4e8a3e94b7a6" config-ref="httpListenerConfig" path="/test" responseStreamingMode="ALWAYS" allowedMethods="POST"/>
+		<ee:transform doc:name="attachments" doc:id="7fdeeb27-6350-4308-9c4a-8aa2649adfa6" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+var payloadParts=payload pluck($) default []
+---
+payloadParts[0] pluck($) default []]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<set-variable value="#[[]]" doc:name="fileNames" doc:id="3d9e1688-a709-41e2-a6fe-4d51bd6b3879" variableName="fileNames"/>
+		<foreach doc:name="For Each" doc:id="a86550c8-1810-4dc1-ac36-b48d203937bc" >
+			<logger level="INFO" doc:name="Logger" doc:id="86c7327b-d96d-4cb9-89b7-e58c7d266faa" message='#[payload.headers."Content-Disposition".filename]'/>
+			<ee:transform doc:name="fileNames" doc:id="f9184e85-59f5-4cc4-9411-703a857252da" >
+				<ee:message >
+				</ee:message>
+				<ee:variables >
+					<ee:set-variable variableName="fileNames" ><![CDATA[%dw 2.0
+output application/java
+---
+vars.fileNames ++ [payload.headers."Content-Disposition".filename]]]></ee:set-variable>
+				</ee:variables>
+			</ee:transform>
+			<logger level="INFO" doc:name="Logger" doc:id="3ed061fd-28b6-4abe-a35b-4b15281c0ac2" message="#[vars.fileNames]"/>
+			<file:write doc:name="Write" doc:id="4b589c00-d173-497f-a59a-2021ad2c04a0" config-ref="atchementFileConfig" path='#[payload.headers."Content-Disposition".filename]'>
+				<file:content ><![CDATA[#[payload.content]]]></file:content>
+			</file:write>
+		
+</foreach>
+		<ee:transform doc:name="Transform Message" doc:id="9ef5ae3b-79b3-4b1b-bc22-4e42923c8b02">
+				<ee:message>
+					<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	message: "file recieved sucessfully.",
+	files: vars.fileNames
+}]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+	
+</flow>
+
+</mule>
