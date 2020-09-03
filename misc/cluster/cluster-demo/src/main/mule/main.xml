@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:scripting="http://www.mulesoft.org/schema/mule/scripting" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mule/scripting/current/mule-scripting.xsd">
+	
+	<http:listener-config name="httpListenerConfig" doc:name="HTTP Listener config" doc:id="0334f6c5-14af-4f37-ab1c-90ca94ca16fc" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<configuration doc:name="Configuration" doc:id="fb8f8597-7a49-4a6d-9bad-5c7f07c35827" >
+	 <expression-language>
+    import java!org::mule::util::NetworkUtils
+    import java!java::lang::System
+        <global-functions>
+            def getServerDetails() { 
+            String osName = System.getProperty("os.name");
+            String osVersion = System::getProperty("os.version");
+            String javaVersion = System::getProperty("java.version");
+            String javaVendor = Syste::getProperty("java.vendor");
+            return ["1", "2", osName, osVersion, javaVersion, javaVendor];
+            }
+        </global-functions>
+    </expression-language>
+	</configuration>
+
+	<flow name="server-info" doc:id="2557bf4e-c7b0-4856-9ec4-c7e24dd6291c" >
+		<http:listener doc:name="Listener" doc:id="e91f90ea-289d-42fb-b2e3-293940e45bb2" config-ref="httpListenerConfig" path="/cluster"/>
+		<ee:transform doc:name="server info" doc:id="f3a236f0-c2bf-4758-9feb-4a1b9ca01e28" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	server: {
+		host: server.host,
+		ip: server.ip,
+		javaVersion: server['javaVersion'],
+		javaVendor: server['javaVendor'],
+		osName: server['osName'],
+		osVersion: server['osVersion'],
+		muleVersion: mule.version,
+		clusterId: mule.clusterId,
+		nodeId: mule.nodeId
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		
+	</flow>
+	
+</mule>
