@@ -1,0 +1,10 @@
+ftp:
+  host: "ftp.devrel.mulesoft.com"
+  port: "21"
+  username: "devrel-mulesoft"
+  password: "mulesoft123"
+  
+sfdc:
+  username: "sanjeevtripathi@gmail.com"
+  password: "kamal123"
+  token: "HupRyy7Oo1GrIW1a5A6pzoDN"

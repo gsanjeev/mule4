@@ -1,0 +1,42 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="new_customers" format="csv">
+      <types:shape format="weave" example="examples/new_customers.csv"><![CDATA[%dw 2.0
+type new_customers = Array<{|
+  Salutation: String, 
+  "First Name": String, 
+  "Last Name": String, 
+  Title: String, 
+  "Mailing Street": String, 
+  "Mailing City": String, 
+  "Mailing State/Province": String, 
+  "Mailing Zip/Postal Code": String, 
+  "Mailing Country": String, 
+  Phone: String, 
+  Mobile: String, 
+  Fax: String, 
+  Email: String, 
+  "Account Owner": String, 
+  "Account Name": String
+|}> {"MetadataFormat": "csv"}
+
+]]></types:shape>
+      <types:properties>
+        <types:property name="headerLineNumber" value="0"/>
+        <types:property name="header" value="true"/>
+        <types:property name="isQuotedString" value="false"/>
+        <types:property name="separator" value=","/>
+      </types:properties>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#d60eb7ec-980d-4b0a-b57e-84808ea4d6de">
+    <types:processor-declaration>
+      <types:output-event>
+        <types:message>
+          <types:payload type="new_customers"/>
+        </types:message>
+      </types:output-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>
