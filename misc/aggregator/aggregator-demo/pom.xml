@@ -3,11 +3,11 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.mycompany</groupId>
-	<artifactId>oauth2-provider-test-api</artifactId>
+	<artifactId>aggregator-demo</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>mule-application</packaging>
 
-	<name>oauth2-provider-test-api</name>
+	<name>aggregator-demo</name>
 
     <properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -48,18 +48,11 @@
             <version>1.2.0</version>
             <classifier>mule-plugin</classifier>
         </dependency>
-    	<dependency>
+		<dependency>
             <groupId>org.mule.modules</groupId>
-            <artifactId>mule-apikit-module</artifactId>
-            <version>1.3.13</version>
+            <artifactId>mule-aggregators-module</artifactId>
+            <version>1.0.2</version>
             <classifier>mule-plugin</classifier>
-        </dependency>
-    	<dependency>
-            <groupId>e52294ef-adb2-4ef6-a92d-52d051ba9df3</groupId>
-            <artifactId>test-mule-oauth2-provider</artifactId>
-            <version>1.0.3</version>
-            <classifier>raml</classifier>
-            <type>zip</type>
         </dependency>
     </dependencies>
 

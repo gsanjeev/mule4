@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:aggregators="http://www.mulesoft.org/schema/mule/aggregators"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/aggregators http://www.mulesoft.org/schema/mule/aggregators/current/mule-aggregators.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="ec084afb-8088-411f-b729-aa946744d299" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="sizeAggregator" doc:id="6708b8b0-030b-4169-96d7-95614d20715c" >
+		<http:listener doc:name="Listener" doc:id="dfbd4d8a-8377-40bc-9732-20b82d64d2b2" config-ref="HTTP_Listener_config" path="/agSize"/>
+		<aggregators:size-based-aggregator doc:name="Size based aggregator" doc:id="b7f8edda-64b1-4f85-981e-b29b2404e277" name="sizeAggregator" maxSize="5">
+			<aggregators:incremental-aggregation >
+				<logger level="INFO" doc:name="Logger" doc:id="11ed8b15-b826-4e9a-b309-c22c93f9f0d6" message="#[payload]"/>
+			</aggregators:incremental-aggregation>
+			<aggregators:aggregation-complete >
+				<logger level="INFO" doc:name="Logger" doc:id="09af9859-0835-434c-8022-39b0a6a693e2" message='#["Batch completed"]'/>
+			</aggregators:aggregation-complete>
+		</aggregators:size-based-aggregator>
+	</flow>
+	<flow name="sizeAggregatorListener" doc:id="58597486-46d6-43e0-838e-670cc7700e4e" >
+		<aggregators:aggregator-listener doc:name="Aggregator listener" doc:id="17ddc436-fa8e-4b1c-8daa-8f34cd823fc5" aggregatorName="sizeAggregator"/>
+		<ee:transform doc:name="Transform Message" doc:id="dc7950a2-46a1-49ff-82e7-afed2db77ed6" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="d00a84b0-369c-48aa-9929-7dea092ba108" message="#[payload]"/>
+	</flow>
+	
+	<flow name="timeAggregator" doc:id="5da4ac1e-ca18-4c28-abfb-583c6c83ddac" >
+		<http:listener doc:name="Listener" doc:id="f3c204ef-1f89-4d6f-9dca-fedb620ea5b4" config-ref="HTTP_Listener_config" path="/agTime"/>
+		<aggregators:time-based-aggregator doc:name="Time based aggregator" doc:id="64178ff0-9362-4340-ad53-c0d0c7d3ae65" name="timeAggregator" period="10">
+			<aggregators:incremental-aggregation >
+				<logger level="INFO" doc:name="Logger" doc:id="c781905b-b441-497f-804e-4786f4f3aa27" message="#[payload]" />
+			</aggregators:incremental-aggregation>
+		</aggregators:time-based-aggregator>
+	
+</flow>
+	<flow name="timeAggregatorListener" doc:id="d4771283-a94f-49d1-83ea-8ccf83e921e2" >
+		<aggregators:aggregator-listener doc:name="Aggregator listener" doc:id="d16f52c0-a729-436a-8955-b8059b530fff" aggregatorName="timeAggregator"/>
+		<ee:transform doc:name="Transform Message" doc:id="71b95a88-a326-47ca-ab30-9de284a2e17f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="a12b30b0-a2ed-454b-94fe-33768afdcfa1" message="#[payload]"/>
+	</flow>
+	
+	<flow name="groupAggregator" doc:id="4d9a9c6f-f551-48ab-8c46-542b135e4afa" >
+		<http:listener doc:name="Listener" doc:id="18bd795f-3bfe-4cc5-ac30-04ef635b380c" config-ref="HTTP_Listener_config" path="/agGroup"/>
+		<aggregators:group-based-aggregator doc:name="Group based aggregator" doc:id="6384d6ad-3b01-468c-82b4-17a0f84b9455" name="groupAggregator" groupId="#[payload.productType]" groupSize="5">
+			<aggregators:incremental-aggregation >
+				<logger level="INFO" doc:name="Logger" doc:id="db8e7ab0-b09c-4645-8898-1b93750ebdc5" message="#[payload]" />
+			</aggregators:incremental-aggregation>
+			<aggregators:aggregation-complete >
+				<logger level="INFO" doc:name="Logger" doc:id="a6b6b3a1-811e-45a4-876c-a584a46adccc" message='#["Batch completed"]' />
+			</aggregators:aggregation-complete>
+		</aggregators:group-based-aggregator>
+	</flow>
+	<flow name="groupAggregatorListener" doc:id="2d6f464d-0487-44ec-92b9-cbc4098b3271" >
+		<aggregators:aggregator-listener doc:name="Aggregator listener" doc:id="c2f23cde-467e-470f-9d9f-ee772df47b4a" aggregatorName="groupAggregator"/>
+		<ee:transform doc:name="Transform Message" doc:id="ec5aa2ae-9a2f-4892-b33c-79bbbc1619df" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="9916977f-9298-41f3-b146-bc87b2091418" message="#[payload]"/>
+	</flow>
+</mule>

@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:api-gateway="http://www.mulesoft.org/schema/mule/api-gateway" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd  http://www.mulesoft.org/schema/mule/api-gateway http://www.mulesoft.org/schema/mule/api-gateway/current/mule-api-gateway.xsd">
-    <http:listener-config name="test-mule-oauth2-provider-httpListenerConfig">
-        <http:listener-connection host="0.0.0.0" port="8082" />
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd ">
+    <http:listener-config name="sample-test-api-httpListenerConfig">
+        <http:listener-connection host="0.0.0.0" port="8081" />
     </http:listener-config>
-    <apikit:config name="test-mule-oauth2-provider-config" api="resource::e52294ef-adb2-4ef6-a92d-52d051ba9df3:test-mule-oauth2-provider:1.0.3:raml:zip:test-mule-oauth2-provider.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
-    <api-gateway:autodiscovery apiId="16357875" ignoreBasePath="true" doc:name="API Autodiscovery" doc:id="24255263-e885-4093-84b1-84c05f93e80f" flowRef="test-mule-oauth2-provider-main" />
-    <flow name="test-mule-oauth2-provider-main">
-        <http:listener config-ref="test-mule-oauth2-provider-httpListenerConfig" path="/api/*">
+    <apikit:config name="sample-test-api-config" api="resource::e52294ef-adb2-4ef6-a92d-52d051ba9df3:sample-for-test:1.0.1:raml:zip:sample-test-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <flow name="sample-test-api-main">
+        <http:listener config-ref="sample-test-api-httpListenerConfig" path="/api/*">
             <http:response statusCode="#[vars.httpStatus default 200]">
                 <http:headers>#[vars.outboundHeaders default {}]</http:headers>
             </http:response>
@@ -15,7 +14,7 @@
                 <http:headers>#[vars.outboundHeaders default {}]</http:headers>
             </http:error-response>
         </http:listener>
-        <apikit:router config-ref="test-mule-oauth2-provider-config" />
+        <apikit:router config-ref="sample-test-api-config" />
         <error-handler>
             <on-error-propagate type="APIKIT:BAD_REQUEST">
                 <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
@@ -97,8 +96,8 @@ output application/json
             </on-error-propagate>
         </error-handler>
     </flow>
-    <flow name="test-mule-oauth2-provider-console">
-        <http:listener config-ref="test-mule-oauth2-provider-httpListenerConfig" path="/console/*">
+    <flow name="sample-test-api-console">
+        <http:listener config-ref="sample-test-api-httpListenerConfig" path="/console/*">
             <http:response statusCode="#[vars.httpStatus default 200]">
                 <http:headers>#[vars.outboundHeaders default {}]</http:headers>
             </http:response>
@@ -107,7 +106,7 @@ output application/json
                 <http:headers>#[vars.outboundHeaders default {}]</http:headers>
             </http:error-response>
         </http:listener>
-        <apikit:console config-ref="test-mule-oauth2-provider-config" />
+        <apikit:console config-ref="sample-test-api-config" />
         <error-handler>
             <on-error-propagate type="APIKIT:NOT_FOUND">
                 <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
@@ -124,13 +123,13 @@ output application/json
             </on-error-propagate>
         </error-handler>
     </flow>
-    <flow name="get:\test:test-mule-oauth2-provider-config">
+    <flow name="get:\test:sample-test-api-config">
         <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
             <ee:message>
                 <ee:set-payload><![CDATA[%dw 2.0
 output application/json
 ---
-"This is test oauth2 token enforcement using mule oauth2 provider api."]]></ee:set-payload>
+"this is sample test api"]]></ee:set-payload>
             </ee:message>
         </ee:transform>
     </flow>

@@ -28,6 +28,7 @@ http://www.mulesoft.org/schema/mule/scripting http://www.mulesoft.org/schema/mul
 
 	<flow name="server-info" doc:id="2557bf4e-c7b0-4856-9ec4-c7e24dd6291c" >
 		<http:listener doc:name="Listener" doc:id="e91f90ea-289d-42fb-b2e3-293940e45bb2" config-ref="httpListenerConfig" path="/cluster"/>
+		<logger level="INFO" doc:name="Logger" doc:id="2bf5fd8f-2cdb-4378-90ae-96b76b50a1a4" message="#['clusterId:' ++  mule.clusterId]"/>
 		<ee:transform doc:name="server info" doc:id="f3a236f0-c2bf-4758-9feb-4a1b9ca01e28" >
 			<ee:message >
 				<ee:set-payload ><![CDATA[%dw 2.0
