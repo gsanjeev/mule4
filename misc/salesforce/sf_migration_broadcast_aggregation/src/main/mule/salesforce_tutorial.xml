@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd">
+	<http:listener-config name="httpListenerConfig" doc:name="HTTP Listener config" doc:id="e43416ff-508a-4b68-95d9-76e8121c97a7" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<db:config name="databaseConfig" doc:name="Database Config" doc:id="eae91a44-be05-40a5-b8db-72a6f0fb5f13" >
+		<db:my-sql-connection host="congo.c3w6upfzlwwe.us-west-1.rds.amazonaws.com" port="3306" user="mulesoft" password="mulesoft" database="congo" />
+	</db:config>
+	<file:config name="fileConfig" doc:name="File Config" doc:id="fd2a2bd5-f0d3-4c26-b9a8-e14cb29b5d85" >
+		<file:connection workingDir="F:\tmp\mule\salesforce" />
+	</file:config>
+	
+	<http:request-config name="httpRequestConfiguration" doc:name="HTTP Request configuration" doc:id="da722d01-0574-433d-adc6-02619270f43c" >
+		<http:request-connection host="0.0.0.0" port="8081" />
+	</http:request-config>
+	<salesforce:sfdc-config name="salesforceConfig" doc:name="Salesforce Config" doc:id="99b88f28-cc67-4628-8c97-deabf4a2f2f0" >
+		<salesforce:basic-connection username="sanjeevtripathi@gmail.com" password="kamal123" securityToken="HupRyy7Oo1GrIW1a5A6pzoDN" />
+	</salesforce:sfdc-config>
+	<flow name="get-leads" doc:id="10792ba8-5b63-40ff-85ef-5e4d5fd513dd" >
+		<http:listener doc:name="HTTP GET /leads" doc:id="79928392-db33-4c6f-9f4f-9a5657a564d5" config-ref="httpListenerConfig" path="/leads"/>
+		<db:select doc:name="select leads" doc:id="8040f776-afa6-445a-9473-282a1f799c46" config-ref="databaseConfig" >
+			<db:sql ><![CDATA[SELECT * FROM contacts]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="leads" doc:id="446578d6-bb09-42c8-85b4-60ff3893de26" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map(item, index) ->{
+	FirstName: item.FirstName,
+	LastName: item.LastName,
+	Email: item.Email,
+	Company: item.Company
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="DataMigration" doc:id="a885ae03-c7bc-4d19-992d-7a404130e2f6" >
+		<http:listener doc:name="Listener" doc:id="feece42b-ee02-4e97-8707-13a93cc36cf4" config-ref="httpListenerConfig" path="/salesforce"/>
+		<db:select doc:name="Select" doc:id="c32ced2b-f7d9-4f8a-9782-89ae3291dab0" config-ref="databaseConfig">
+			<db:sql ><![CDATA[SELECT * FROM contacts]]></db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="cc941c38-c596-4b99-a373-6f24ef1f149c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map(item, index) ->{
+	FirstName: item.FirstName,
+	LastName: item.LastName,
+	Email: item.Email,
+	Company: item.Company
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="e97f4b59-32ee-452f-9455-1b1561e600a3" >
+			<salesforce:create type="Lead" doc:name="Create" doc:id="8bad8b0b-25d8-44bc-b14c-bfae5fa5e9ea" config-ref="salesforceConfig">
+				<salesforce:records ><![CDATA[#[[payload]]]]></salesforce:records>
+		</salesforce:create>
+		</foreach>
+		<logger level="INFO" doc:name="Logger" doc:id="ac229f9f-870f-4e14-a323-3a440d0b72d4" message="Leads created."/>
+	
+</flow>
+	<flow name="Broadcast" doc:id="28f217fe-b643-405c-ba07-2a8c76cb0009" >
+		<salesforce:modified-object-listener objectType="Lead" doc:name="On Modified Object" doc:id="579043f7-d343-4663-9c9c-0c6fc94bffbd" config-ref="salesforceConfig">
+			<reconnect />
+			<scheduling-strategy >
+				<fixed-frequency />
+			
+</scheduling-strategy>
+		</salesforce:modified-object-listener>
+		<ee:transform doc:name="Transform Message" doc:id="f16af6d7-fa4d-467f-b4d1-539662ab5600">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+[payload] map {
+	"FirstName": payload.FirstName,
+	"LastName": payload.LastName,
+	"Company": payload.Company,
+	"Email": payload.Email
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<scatter-gather doc:name="Scatter-Gather" doc:id="f54ea56e-1eac-436b-abf3-31e183663e88" >
+			<route >
+				<file:write doc:name="Write" doc:id="62088a1e-38fc-4105-a92c-07f0a18e50d4" config-ref="fileConfig" path="output/Accounts.csv" mode="APPEND">
+			<file:content><![CDATA[#[%dw 2.0
+output application/csv header = false, headerLineNumber = 0
+---
+payload map ( payload01 , indexOfPayload01 ) -> {
+	FirstName: payload01.FirstName as String,
+	LastName: payload01.LastName as String,
+	Company: payload01.Company as String,
+	Email: payload01.Email as String
+}]]]></file:content>
+		</file:write>
+			</route>
+			<route >
+				<file:write doc:name="Write" doc:id="5d418d71-c92f-48a2-903a-cedc2ac99fa9" config-ref="fileConfig" path="output/Accounts2.csv" mode="APPEND">
+					<file:content ><![CDATA[#[%dw 2.0
+output application/csv header = false, headerLineNumber = 0
+---
+payload map ( payload01 , indexOfPayload01 ) -> {
+	FirstName: payload01.FirstName as String,
+	LastName: payload01.LastName as String,
+	Company: payload01.Company as String,
+	Email: payload01.Email as String
+}]]]></file:content>
+				</file:write>
+			</route>
+		</scatter-gather>
+		<logger level="INFO" doc:name="Logger" doc:id="7b79ac4e-ce55-453c-9f39-2493c0d19e04" message='"Successfully executed writting to both csvs"'/>
+	</flow>
+	<flow name="Aggregation" doc:id="f219893f-493a-45b7-98e5-a8c8ad664e1c" >
+		<http:listener doc:name="Listener" doc:id="f061dba6-331e-40f2-8abc-ba81a2e1ea73" config-ref="httpListenerConfig" path="/aggregation"/>
+		<scatter-gather doc:name="Scatter-Gather" doc:id="a49ad6fc-eec4-42c8-b637-e434eb492b6e" >
+			<route >
+				<http:request method="GET" doc:name="Request" doc:id="d2431839-d8fb-4cf4-a3e4-3ceab7559d1a" config-ref="httpRequestConfiguration" url="https://mulesoft.s3-us-west-1.amazonaws.com/userdata.csv" />
+				<set-variable value="#[payload]" doc:name="csv1" doc:id="b4a49991-f908-4b5d-98cf-b6b073d552c4" variableName="csv1" />
+			</route>
+			<route >
+				<http:request method="GET" doc:name="Request" doc:id="7430e91c-20c4-46e0-85a2-f43cf5aa69e5" url="https://mulesoft.s3-us-west-1.amazonaws.com/moreuserdata.csv" />
+				<set-variable value="#[payload]" doc:name="csv2" doc:id="3a82eb50-2c36-46c5-bb05-9a7dc756bc3d" variableName="csv2" />
+			</route>
+		</scatter-gather>
+		<ee:transform doc:name="Transform Message" doc:id="4de0471d-8ffc-4959-b04a-256cec9fadc0" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+import * from dw::core::Arrays
+output application/json
+---
+vars.csv1 map(item, index) ->{
+	FirstName: item.fname,
+	LastName: item.lname,
+	Email: item.email,
+	Company: item.company,
+	AnnualRevenue: vars.csv2.AnnualRevenue[indexOf(vars.csv2.uuid, item.uuid)],
+	Phone: vars.csv2.Phone[indexOf(vars.csv2.uuid, item.uuid)]
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<foreach doc:name="For Each" doc:id="dee8cc64-d9f3-44f6-a16f-d8a53db7c10f">
+			<salesforce:create type="Lead" doc:name="Create" doc:id="77c3ad34-e3b8-4d14-b6ff-6b1a8ed5844c" config-ref="salesforceConfig">
+				<salesforce:records><![CDATA[#[[payload]]]]></salesforce:records>
+			</salesforce:create>
+		</foreach>
+		<logger level="INFO" doc:name="Logger" doc:id="8369e3aa-32c5-4202-8771-d7786cfbb40b" message="Leads created successfully."/>
+	
+</flow>
+</mule>

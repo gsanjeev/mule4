@@ -1,0 +1,26 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="CSVexample" format="csv">
+      <types:shape format="weave"><![CDATA[%dw 2.0
+
+type CSVexample = Array<{|  FirstName: String,   LastName: String,   Company: String,   Email: String|}> {"isQuotedString": "false",
+"header": "true",
+"headerLineNumber": "0"}
+
+]]></types:shape>
+      <types:properties>
+        <types:property name="headerLineNumber" value="0"/>
+        <types:property name="header" value="true"/>
+        <types:property name="isQuotedString" value="false"/>
+      </types:properties>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#62088a1e-38fc-4105-a92c-07f0a18e50d4">
+    <types:operation-declaration>
+      <types:inputs>
+        <types:parameter name="content" type="CSVexample"/>
+      </types:inputs>
+    </types:operation-declaration>
+  </types:enrichment>
+</types:mule>

@@ -1,0 +1,69 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="contactdata" format="json">
+      <types:shape format="weave" example="examples/contactdata.json"><![CDATA[%dw 2.0
+
+type contactdata = Array<{|  firstName: String,   lastName: String,   mobile: Number {"typeId": "double"},   email: String|}> {"example": "[{\\\"firstName\\\":\\\"David\\\",\\\"lastName\\\":\\\"Portland\\\",\\\"mobile\\\":2343242346,\\\"email\\\":\\\"david@gmail.com\\\"},{\\\"mobile\\\":4003242346,\\\"firstName\\\":\\\"Mike\\\",\\\"lastName\\\":\\\"Detroit\\\",\\\"email\\\":\\\"mike@gmail.com\\\"},{\\\"mobile\\\":7003242346,\\\"firstName\\\":\\\"James\\\",\\\"lastName\\\":\\\"SanFrancisco\\\",\\\"email\\\":\\\"james@gmail.com\\\"},{\\\"mobile\\\":8003242346,\\\"firstName\\\":\\\"Don\\\",\\\"lastName\\\":\\\"Freemont\\\",\\\"email\\\":\\\"don@gmail.com\\\"},{\\\"mobile\\\":9003242346,\\\"firstName\\\":\\\"Jon\\\",\\\"lastName\\\":\\\"DailyCity\\\",\\\"email\\\":\\\"jon@gmail.com\\\"}]"}
+
+]]></types:shape>
+    </types:type>
+    <types:type name="accountdata" format="json">
+      <types:shape format="weave" example="examples/accountdata.json"><![CDATA[%dw 2.0
+
+type accountdata = Array<{|  Name: String,   BillingCountry: String,   BillingCity: String,   BillingPostalCode: String,   BillingState: String,   BillingAddress: String|}> {"example": "[{\\\"Name\\\":\\\"Sanjeev\\\",\\\"BillingCountry\\\":\\\"United States\\\",\\\"BillingCity\\\":\\\"irving\\\",\\\"BillingPostalCode\\\":\\\"75038\\\",\\\"BillingState\\\":\\\"tx\\\",\\\"BillingAddress\\\":\\\"214 Cimaron Park\\\"},{\\\"Name\\\":\\\"Rachel\\\",\\\"BillingCountry\\\":\\\"United States\\\",\\\"BillingCity\\\":\\\"irving\\\",\\\"BillingPostalCode\\\":\\\"75038\\\",\\\"BillingState\\\":\\\"tx\\\",\\\"BillingAddress\\\":\\\"214 Hidden Ridge\\\"}]"}
+
+]]></types:shape>
+    </types:type>
+    <types:type name="contactdata_csv" format="csv">
+      <types:shape format="weave" example="examples/contactdata.csv"><![CDATA[%dw 2.0
+
+type contactdata_csv = Array<{|  FirstName: String,   LastName: String,   AccountName: String,   Email: String,   Phone: String|}> {"isQuotedString": "false",
+"header": "true",
+"headerLineNumber": "0"}
+
+]]></types:shape>
+      <types:properties>
+        <types:property name="headerLineNumber" value="0"/>
+        <types:property name="header" value="true"/>
+        <types:property name="isQuotedString" value="false"/>
+      </types:properties>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#645ca7c2-dc26-4865-acd4-da4b86ad707c">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="contactdata"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#82cf2907-e54e-4714-96aa-40ff302d0c08">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="accountdata"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#47e37770-c640-4e2f-88c1-40038f97f7da">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="contactdata_csv"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#907ae055-39a3-4e7a-85fe-27c300bc238a">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="contactdata_csv"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>

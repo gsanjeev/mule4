@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:batch="http://www.mulesoft.org/schema/mule/batch" xmlns:file="http://www.mulesoft.org/schema/mule/file"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:salesforce="http://www.mulesoft.org/schema/mule/salesforce" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/salesforce http://www.mulesoft.org/schema/mule/salesforce/current/mule-salesforce.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd
+http://www.mulesoft.org/schema/mule/batch http://www.mulesoft.org/schema/mule/batch/current/mule-batch.xsd">
+	<http:listener-config name="HTTPListenerConfig" doc:name="HTTP Listener config" doc:id="7aa2373f-2504-4fb2-a268-a577ac82f715" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<salesforce:sfdc-config name="sfdcConfig" doc:name="Salesforce Config" doc:id="50a170a7-83cd-4206-a0b4-301e226bedc0" >
+		<salesforce:basic-connection username="sanjeevtripathi@gmail.com" password="aaaa3232333" securityToken="5645645645645" />
+	</salesforce:sfdc-config>
+	<file:config name="fileConfig" doc:name="File Config" doc:id="7dae2066-743f-4cf9-b196-de21ea17aad2" >
+		<file:connection workingDir="F:\tmp\mule\salesforce" />
+	</file:config>
+	<salesforce:sfdc-config name="SalesforceConfigWithOAuth2" doc:name="Salesforce Config" doc:id="bf5c6630-25c2-447c-8092-4d1e405a5ccc" >
+		<salesforce:config-with-oauth-connection >
+			<salesforce:oauth-authorization-code consumerKey="abc12345666" consumerSecret="abc12345666" authorizationUrl="https://ap17.salesforce.com/services/oauth2/authorize" accessTokenUrl="https://ap17.salesforce.com/services/oauth2/token" />
+			<salesforce:oauth-callback-config listenerConfig="HTTPListenerConfig" callbackPath="/callback" authorizePath="/authorize" externalCallbackUrl="http://localhost:8081/callback" />
+		</salesforce:config-with-oauth-connection>
+	</salesforce:sfdc-config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="9775fd29-fbe0-414f-bb55-75dbfdde9864" basePath="/services">
+		<http:request-connection protocol="HTTPS" host="ap17.salesforce.com" />
+	</http:request-config>
+	<flow name="sf-upsert" doc:id="653843f8-2a43-465a-93f7-30e8e82c71dd" >
+		<http:listener doc:name="Listener" doc:id="54623d81-eddb-45bf-8143-9d7937114b59" config-ref="HTTPListenerConfig" path="/contact" allowedMethods="PUT"/>
+		<ee:transform doc:name="Transform Message" doc:id="645ca7c2-dc26-4865-acd4-da4b86ad707c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload map (item, index) ->
+{
+	FirstName : item.firstName,
+	LastName : item.lastName,
+	Email :  item.email,
+	Phone : item.mobile
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:upsert doc:name="Upsert" doc:id="40421e49-4386-47b8-baec-c6a10dd156ef" config-ref="sfdcConfig" objectType="Contact" externalIdFieldName="Email"/>
+		<ee:transform doc:name="Transform Message" doc:id="6a906f24-404c-4593-bf6d-0310215638e3" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="sf-query" doc:id="5860c4d8-cdf6-4150-87f8-8382301ea2fb" >
+		<http:listener doc:name="Listener" doc:id="3385e13a-fb32-4495-9187-e4ab68c54d52" config-ref="HTTPListenerConfig" allowedMethods="GET" path="/accounts"/>
+		<set-variable value="#[attributes.queryParams.billingCity default '']" doc:name="billingCity" doc:id="87656af4-6391-442b-a993-dfeb8f14288c" variableName="billingCity"/>
+		<choice doc:name="Choice" doc:id="22d0ea2b-c460-41cd-b229-97baaab5d155" >
+			<when expression="#[vars.billingCity != '']">
+				<salesforce:query doc:name="Query by billingCity" doc:id="5d89d68a-e10e-4b7d-8617-d04ae7551c9c" config-ref="sfdcConfig">
+					<salesforce:salesforce-query ><![CDATA[SELECT Name, BillingCountry, BillingCity, BillingState, BillingPostalCode
+FROM Account
+WHERE BillingCity = ':billingCity']]></salesforce:salesforce-query>
+					<salesforce:parameters ><![CDATA[#[output application/java
+---
+{
+	billingCity : vars.billingCity
+}]]]></salesforce:parameters>
+				</salesforce:query>
+			</when>
+			<otherwise >
+				<salesforce:query-all doc:name="Query all" doc:id="8fc2ebd6-567b-4f48-9d4d-3cc4721c6ca9" config-ref="sfdcConfig">
+			<salesforce:salesforce-query><![CDATA[SELECT Name, BillingCountry, BillingCity, BillingState, BillingPostalCode
+FROM Account]]></salesforce:salesforce-query>
+		</salesforce:query-all>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="Transform Message" doc:id="8b2445b8-15cd-4c8c-a8b2-4c7969b7425f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="sf-create" doc:id="e7c4dcf7-4ea2-4c4b-be88-2806eec3d8da" >
+		<http:listener doc:name="Listener" doc:id="3f2b563e-f7f8-4014-8af9-d2d3769f4801" config-ref="HTTPListenerConfig" path="/accounts" allowedMethods="POST"/>
+		<ee:transform doc:name="Map Payload to Account[]" doc:id="82cf2907-e54e-4714-96aa-40ff302d0c08" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload map (item, index) ->
+{
+	Name: item.Name,
+	BillingStreet: item.BillingAddress,
+	BillingCity: item.BillingCity,
+	BillingState: item.BillingState,
+	BillingPostalCode: item.BillingPostalCode,
+	BillingCountry: item.BillingCountry
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:create type="Account" doc:name="Create Account" doc:id="7428f1fe-1297-45c2-be61-b96aabc910cb" config-ref="sfdcConfig"/>
+		<ee:transform doc:name="Convert response to json" doc:id="12cf5241-ebe6-4b9c-8464-8873e4aed488" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="sf-upload-csv" doc:id="c0210085-b9ee-4821-9501-7b90c06aa06b" initialState="stopped">
+		<file:listener doc:name="On New or Updated File" doc:id="368c7e06-3637-41af-9992-42a49e36a6da" config-ref="fileConfig" directory="input" watermarkMode="CREATED_TIMESTAMP" autoDelete="true">
+			<scheduling-strategy >
+				<fixed-frequency frequency="20000"/>
+			</scheduling-strategy>
+		</file:listener>
+		<ee:transform doc:name="Map payload to Contact[]" doc:id="47e37770-c640-4e2f-88c1-40038f97f7da" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload map (item, index) ->
+{
+	LastName: item.LastName,
+	FirstName: item.FirstName,
+	Phone: item.Phone,
+	Email: item.Email
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<salesforce:create type="Contact" doc:name="Create" doc:id="c952ed0c-7981-4534-a128-ce8bbb182f2c" config-ref="sfdcConfig"/>
+		<ee:transform doc:name="Convert response to json" doc:id="c24825a9-205a-4a3b-bf20-7f338a947a02" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<file:write doc:name="Write" doc:id="dbc4561c-9949-496f-9509-0aa10aa3840d" config-ref="fileConfig" path="output/result.json"/>
+	</flow>
+	<flow name="sf-betch-create-single" doc:id="4a2afe51-57cd-48aa-8381-2984494458b3" initialState="stopped">
+		<file:listener doc:name="On New or Updated File" doc:id="089dea14-e6d0-439e-abba-e6fd11cb0af9" config-ref="fileConfig" directory="input" autoDelete="true">
+			<scheduling-strategy >
+				<fixed-frequency frequency="20000"/>
+			</scheduling-strategy>
+		</file:listener>
+		<ee:transform doc:name="Transform Message" doc:id="c198bde9-3946-454d-8e5c-6ebe47e5e1d2" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<batch:job jobName="createSingleBatchJob" doc:id="ba391cc4-19d5-4dd5-95f1-61471bc375e0" >
+			<batch:process-records >
+				<batch:step name="Batch_Step" doc:id="2baf67d7-abc9-47dd-ba97-87647d098092" >
+					<ee:transform doc:name="Transform Message" doc:id="907ae055-39a3-4e7a-85fe-27c300bc238a" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+[
+	{
+		FirstName: payload.FirstName,
+		LastName: payload.LastName,
+		Email: payload.Email,
+		Phone: payload.Phone
+	}
+]]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<salesforce:create type="Contact" doc:name="Create" doc:id="0aa924ce-57f8-4e80-8d81-a69bb5871807" config-ref="sfdcConfig"/>
+					<ee:transform doc:name="Transform Message" doc:id="ce5bd1ac-ee9c-4514-865b-7d3cd2f7655a" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<logger level="INFO" doc:name="Logger" doc:id="620b1e6a-a87b-40ce-bde7-bef1be6564d6" message="#[payload]"/>
+				</batch:step>
+			</batch:process-records>
+			<batch:on-complete >
+				<logger level="INFO" doc:name="Logger" doc:id="ce1bb9e5-8aac-4a00-a21f-fc004c2f0279" message="Betch completed."/>
+			</batch:on-complete>
+		</batch:job>
+	</flow>
+	<flow name="sf-betch-create-multiple" doc:id="52c14ec0-166c-49a1-bc12-c9d6f0dc40af" initialState="stopped">
+		<file:listener doc:name="On New or Updated File" doc:id="0d6c08c3-c227-4203-9151-ac9c06ec3ffc" config-ref="fileConfig" directory="input" autoDelete="true">
+			<scheduling-strategy >
+				<fixed-frequency frequency="20000"/>
+			</scheduling-strategy>
+		</file:listener>
+		<ee:transform doc:name="Transform Message" doc:id="dfc79060-a329-4c29-a67d-86628268824a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<batch:job jobName="createMultipleBatchJob" doc:id="48f8ce92-ec5d-4feb-93e6-4caab0758dc2" >
+			<batch:process-records >
+				<batch:step name="Batch_Step" doc:id="e9089570-5aef-40cd-9ac4-4669c15614bf" >
+					<ee:transform doc:name="Transform Message" doc:id="03f24018-8e30-43e0-9e0c-dc0c58630570" >
+						<ee:message >
+							<ee:set-payload ><![CDATA[%dw 2.0
+output application/java
+---
+{
+	FirstName: payload.FirstName,
+	LastName: payload.LastName,
+	Email: payload.Email,
+	Phone: payload.Phone
+}
+]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+					<batch:aggregator doc:name="Batch Aggregator" doc:id="1ae7fffd-1c36-49c4-bf05-dae59ad35350" size="10">
+						<salesforce:create type="Contact" doc:name="Create" doc:id="ff53a88d-69cb-4e29-b826-e0f7dd0e6325" config-ref="sfdcConfig" />
+						<ee:transform doc:name="Map result to json" doc:id="28513137-2d79-458c-ae30-7af5a20e9c69">
+						<ee:message>
+							<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+						</ee:message>
+					</ee:transform>
+						<logger level="INFO" doc:name="payload" doc:id="4fd2d2f0-3698-4261-a1a2-06dc634a65f5" message="#[payload]" />
+					</batch:aggregator>
+				
+</batch:step>
+			</batch:process-records>
+			<batch:on-complete >
+				<logger level="INFO" doc:name="Logger" doc:id="55199197-30f7-4073-b767-72bae34ee85e" message="Betch completed."/>
+			</batch:on-complete>
+		</batch:job>
+	</flow>
+	<flow name="sf-oauth2" doc:id="d4ec73d5-e03c-4682-9f77-929670ade888" >
+		<http:listener doc:name="Listener" doc:id="ddd099ef-36b4-49a7-9b49-bf8a91e864c9" config-ref="HTTPListenerConfig" path="/accountsUsingOAuth2" allowedMethods="GET"/>
+		<salesforce:query doc:name="Query Accounts" doc:id="ea0156ab-c533-41cb-82ae-cc40681d1971" config-ref="SalesforceConfigWithOAuth2">
+			<salesforce:salesforce-query ><![CDATA[SELECT name FROM ACCOUNT limit 10]]></salesforce:salesforce-query>
+		</salesforce:query>
+		<ee:transform doc:name="Transform Message" doc:id="c3194d91-09a5-46c2-a283-357e79514434">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="sf-rest-api-oauth2" doc:id="a351f5e9-6ec7-4cdb-ba72-f03075d30105" >
+		<http:listener doc:name="Listener" doc:id="a76cd69d-f2f9-43a8-afcf-38d994577046" config-ref="HTTPListenerConfig" path="/contactsRestAPIOAuth2" allowedMethods="GET"/>
+		<http:request method="POST" doc:name="get access token" doc:id="59695621-149f-494f-91fc-6bbb9abd54b9" config-ref="HTTP_Request_configuration" path="/oauth2/token">
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	"Content-Type" : "application/x-www-form-urlencoded"
+}]]]></http:headers>
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+	"username" : "sanjeevtripathi@gmail.com",
+	"client_secret" : "dddddd",
+	"grant_type" : "password",
+	"password" : "sssssssss",
+	"client_id" : "iiisddddddddddddddd"
+}]]]></http:query-params>
+		</http:request>
+		<logger level="INFO" doc:name="Logger" doc:id="05aff043-6bb9-44d0-b583-6e1e29bffbcf" message="#[payload.access_token]"/>
+		<set-variable value="#[payload.access_token]" doc:name="accessToken" doc:id="cd739483-300f-4aac-84f7-26ebd5f390d4" variableName="accessToken"/>
+		<http:request method="GET" doc:name="qeury contacts" doc:id="ede0232f-6dfe-43bd-b7ee-6d2d921f95ee" config-ref="HTTP_Request_configuration" path="/data/v49.0/query">
+			<http:headers ><![CDATA[#[output application/java
+---
+{
+	"Authorization" : "Bearer " ++ vars.accessToken
+}]]]></http:headers>
+			<http:query-params ><![CDATA[#[output application/java
+---
+{
+	"q" : "SELECT id, lastname, lastmodifieddate FROM contact limit 10 "
+}]]]></http:query-params>
+		</http:request>
+	</flow>
+</mule>

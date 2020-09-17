@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<http:listener-config name="HTTPListenerConfig" doc:name="HTTP Listener config" doc:id="9ba760ae-1f71-4019-b7a0-c833e3b14685" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="success" doc:id="b5f98c68-f0ec-4275-aadb-ad25bf3794c6" >
+		<http:listener doc:name="Listener" doc:id="ac488fb5-bd3a-4778-b775-5673dc03cdcf" config-ref="HTTPListenerConfig" path="/deploy"/>
+		<set-payload value='#[output application/json --- {"message" : "Welcome to deployment to cloudhub and encrypt passwd demo."}]' doc:name="Set Payload" doc:id="e25c0034-d0c0-4f88-abba-ac253e24a081" />
+		<logger level="INFO" doc:name="Logger" doc:id="e6412d9d-9a89-4154-8fad-d6dabfe897bc" message='#["Deploy to cloudhub and encrypt passwd demo app."]'/>
+	</flow>
+</mule>

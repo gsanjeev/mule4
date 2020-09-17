@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<http:listener-config name="HTTPListenerConfig" doc:name="HTTP Listener config" doc:id="dded42ee-cacb-4655-937c-696d0858dca7" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="round-robin-router-demoFlow" doc:id="060f10b9-54b7-403e-ae13-470f2b07dcb0" >
+		<http:listener doc:name="Listener" doc:id="9dbf0536-4474-480a-bad4-853423b3a687" config-ref="HTTPListenerConfig" path="/round-robin"/>
+		<foreach doc:name="For Each" doc:id="08a7afdb-6b1d-44df-97c0-003fcba29386" >
+			<round-robin doc:name="Round Robin" doc:id="753f2c56-8917-44cd-a36a-8213fc1e0d07" >
+				<route >
+					<logger level="INFO" doc:name="Logger" doc:id="ade89c16-fef5-4ef0-b5eb-22c49d902e2d" message="Message from rout 1 + #[payload]"/>
+				</route>
+				<route >
+					<logger level="INFO" doc:name="Logger" doc:id="e2c888a9-81cb-431c-8d74-f1562574831c" message="Message from rout 2 + #[payload]"/>
+				</route>
+			</round-robin>
+		</foreach>
+	</flow>
+</mule>
