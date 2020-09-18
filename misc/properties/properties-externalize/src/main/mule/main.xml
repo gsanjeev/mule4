@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd">
+	<global-property doc:name="Global Property" doc:id="d8057933-db2d-43c0-aa93-1c7b059d7e89" name="properties-file-path" value="F:/tmp/mule/properties" />
+	<global-property doc:name="Global Property" doc:id="0b0d48e3-b80b-432d-be70-b219e3eaaff9" name="env" value="dev" />
+	<configuration-properties doc:name="Configuration properties" doc:id="f8fa7c26-6c94-4daf-9077-dcea6cc78628" file="${properties-file-path}/app-config-${env}.yaml" />
+	<flow name="mainFlow" doc:id="a7568f33-fa8f-4e53-b26c-1c5ced62965d" >
+		<scheduler doc:name="Scheduler" doc:id="dba26f68-3998-4da1-a8cc-abd68f02d62d" >
+			<scheduling-strategy >
+				<fixed-frequency frequency="20000"/>
+			</scheduling-strategy>
+		</scheduler>
+		<logger level="INFO" doc:name="Logger" doc:id="96b665aa-b032-43e4-ab80-99d3e2e9730e" message="#['Db user = '  ++ p('db.user') ++' and db password = ' ++ p('db.password')]"/>
+	</flow>
+</mule>

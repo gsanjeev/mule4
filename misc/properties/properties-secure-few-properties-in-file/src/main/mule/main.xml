@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:secure-properties="http://www.mulesoft.org/schema/mule/secure-properties" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/secure-properties http://www.mulesoft.org/schema/mule/secure-properties/current/mule-secure-properties.xsd">
+	<http:listener-config name="HTTPListenerConfig" doc:name="HTTP Listener config" doc:id="0d62e364-ff24-4eab-89db-24386674d798" >
+		<http:listener-connection host="0.0.0.0" port="${secure::http.port}" />
+	</http:listener-config>
+	<secure-properties:config name="Secure_Properties_Config" doc:name="Secure Properties Config" doc:id="494ef7b0-9d14-4da2-a25b-9423ed11e94e" file="app-config.yaml" key="mulesoft" >
+		<secure-properties:encrypt algorithm="Blowfish" />
+	</secure-properties:config>
+	<configuration-properties doc:name="Configuration properties" doc:id="cdf6f40b-e2c0-4d0a-a3c7-630040364a90" file="app-config.yaml" />
+	<flow name="properties-secure-few-properties-in-fileFlow" doc:id="459c7d87-8e47-46a0-a4cc-24a64069cd27" >
+		<http:listener doc:name="Listener" doc:id="86e4b060-f0a2-4a2e-853d-cf482a45da02" config-ref="HTTPListenerConfig" path="/secure"/>
+		<set-payload value="#[output application/json --- { &quot;http.port&quot;: p('secure::http.port'), &quot;http.token&quot;: p('secure::http.token')}]" doc:name="Set Payload" doc:id="e1f63cfd-664c-433f-a37e-9f4e0256ad88" />
+	</flow>
+</mule>
