@@ -1,0 +1,14 @@
+<sale>
+    <item itemId="2002" saleId="34323">
+        <shipping>6788</shipping>
+        <desc>item1</desc>
+        <price>240</price>
+        <quantity>6</quantity>
+    </item>
+    <item itemId="9002" saleId="84323">
+        <shipping>5788</shipping>
+        <desc>item2</desc>
+        <price>840</price>
+        <quantity>2</quantity>
+    </item>
+</sale>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTPListenerConfig" doc:name="HTTP Listener config" doc:id="f5f8c714-f793-462a-88fd-0f30f033963b" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="split-on-child-element" doc:id="765f3cf2-5fe4-4810-b8af-7ecd3682392d" >
+		<http:listener doc:name="Listener" doc:id="6b258de8-fd70-4ed6-834f-6ae5aa55f2f2" config-ref="HTTPListenerConfig" path="splitAggregate" allowedMethods="POST"/>
+		<set-variable value="#[[]]" doc:name="aggregateItems" doc:id="f141216b-a61b-4124-97ac-7e82a0d03ef8" variableName="aggregateItems"/>
+		<foreach doc:name="For Each" doc:id="ac733feb-9391-43c3-8bd0-b0183868286b" collection="#[payload.sale]">
+			<ee:transform doc:name="Transform Message" doc:id="70f11d18-7724-4980-a5b0-2f9df3c732f8" >
+				<ee:message >
+					<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+				</ee:message>
+			</ee:transform>
+			<logger level="INFO" doc:name="Logger" doc:id="768ccc58-d42b-4cc2-8bd0-5a3fca665be3" message="#[payload]"/>
+			<flow-ref doc:name="aggregate-items" doc:id="6d0abd7b-5994-49ca-ae9c-950d4ca01ef2" name="aggregate-items"/>
+		</foreach>
+		<ee:transform doc:name="Transform Message" doc:id="e7ebdccf-3f93-40f2-9df8-5722d91da007">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+vars.aggregateItems]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="ab30266f-87f3-409b-85b2-f73d43aa8cbf" message="#[payload]" />
+	</flow>
+	<sub-flow name="aggregate-items" doc:id="f5ced032-77b0-43a6-a1ba-811616398a8e" >
+		<ee:transform doc:name="aggregateItems" doc:id="43499d5d-6a20-400d-8cde-35fc1fe00b1a" >
+			<ee:message >
+			</ee:message>
+			<ee:variables >
+				<ee:set-variable variableName="aggregateItems" ><![CDATA[%dw 2.0
+output application/java
+---
+vars.aggregateItems + payload.item]]></ee:set-variable>
+			</ee:variables>
+		</ee:transform>
+	</sub-flow>
+</mule>

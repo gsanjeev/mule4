@@ -1,0 +1,324 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTPListenerConfig" doc:name="HTTP Listener config" doc:id="ebcf688d-3bde-473d-85a0-cf35bccee177" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<validation:config name="validationConfig" doc:name="Validation Config" doc:id="b8e9d67f-c744-46e3-916e-c336bbbaa12d" />
+	<flow name="validation-not-null" doc:id="b22878c2-4861-4129-9817-e9dd81c66dd3" >
+		<http:listener doc:name="Listener" doc:id="789e0184-be11-4ef4-a5c5-d72b1470ee2e" config-ref="HTTPListenerConfig" path="/validate" allowedMethods="POST">
+			<http:error-response statusCode="#[vars.httpStatus]" >
+				<http:body ><![CDATA[#[payload]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<validation:is-not-null doc:name="Is not null" doc:id="0a5f8023-87ec-4181-9882-04dae80a522f" config-ref="validationConfig" value="#[payload.price]"/>
+		<logger level="INFO" doc:name="Logger" doc:id="4011dafb-e698-495b-b418-0dd97554f2a7" message="It is  valid request."/>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="9513b3d3-26a4-45dd-b5bd-5af5bb7c3174" type="VALIDATION:NULL">
+				<ee:transform doc:name="Transform Message" doc:id="a41d85d3-08e4-4bd0-adfd-88ed4b238c75" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	error: error.description,
+	"type": error.errorType
+}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="httpStatus" ><![CDATA[400]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+	<flow name="validation-null" doc:id="08b5bf5d-227f-4c48-9365-e3968c5ba432" >
+		<http:listener doc:name="Listener" doc:id="b6955101-c2b5-400d-87cd-c15e57250338" config-ref="HTTPListenerConfig" path="/validate2">
+			<http:error-response statusCode="#[vars.httpStatus]" >
+				<http:body ><![CDATA[#[payload]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<validation:is-null doc:name="Is null" doc:id="ef86ac94-5421-41ca-a811-9be284199379" config-ref="validationConfig" value="#[payload.desc]"/>
+		<logger level="INFO" doc:name="Logger" doc:id="ddc1adaa-2fb3-4a79-87b5-42c8b003ec29" message="It is valid request."/>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="92405652-3b1f-4ed8-a8c6-a741ec9dfb08" type="VALIDATION:NOT_NULL">
+				<ee:transform doc:name="Transform Message" doc:id="121779f8-adb9-4d88-be9e-bd8e3a034438" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	error: error.description,
+	"type": error.errorType
+}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="httpStatus" ><![CDATA[400]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+	<flow name="validation-number" doc:id="acafd560-9918-4989-9110-b00fc1e77f14" >
+		<http:listener doc:name="Listener" doc:id="b7da341b-c99d-4168-9e2e-9eaf5ea81939" config-ref="HTTPListenerConfig" path="/validate4">
+			<http:error-response statusCode="#[vars.httpStatus]" >
+				<http:body ><![CDATA[#[payload]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<validation:is-number doc:name="Is number" doc:id="c074a6b0-2d44-4f51-a9be-d623d940c733" config-ref="validationConfig" value="#[payload.price]" numberType="DOUBLE" minValue="0.99" maxValue="99.99"/>
+		<logger level="INFO" doc:name="Logger" doc:id="e5389bba-84fe-4e6b-8795-abf41fa9121f" message="It is valid request."/>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="adbe7f1a-f035-4806-913a-b7be3c8efa1a" type="VALIDATION:INVALID_NUMBER">
+				<ee:transform doc:name="Transform Message" doc:id="73376973-57db-4747-91df-799f858da06d" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	error: error.description,
+	"type": error.errorType
+}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="httpStatus" ><![CDATA[400]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		</error-handler>
+	</flow>
+	<flow name="validation-on-error-continue" doc:id="7038d090-8193-47a5-9742-71f8104f1ee1" >
+		<http:listener doc:name="Listener" doc:id="03e2b5f2-ed58-418f-8529-af87be0d07d3" config-ref="HTTPListenerConfig" path="/validate6">
+			<http:error-response statusCode="#[vars.httpStatus]" >
+				<http:body ><![CDATA[#[payload]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<validation:is-number doc:name="Is number" doc:id="2f1114c9-103b-457b-9eeb-2c6267758ec9" config-ref="validationConfig" value="#[payload.price]" numberType="DOUBLE" minValue="0.99" maxValue="99.99"/>
+		<logger level="INFO" doc:name="Logger" doc:id="f20f7dd5-e5d0-48bd-95af-7035d9690633" message="It is valid request."/>
+		<error-handler >
+			<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="2b767a0e-055f-4308-98c5-a29afe08a642" type="VALIDATION:INVALID_NUMBER">
+				<ee:transform doc:name="Transform Message" doc:id="83ee78f9-36e9-4e93-91b2-f93ed6c00765">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	error: error.description,
+	"type": error.errorType
+}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus"><![CDATA[400]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-continue>
+		
+</error-handler>
+	</flow>
+	<flow name="validation-email" doc:id="dfaa4b38-9079-4dc6-825f-9d6d1071da77" >
+		<http:listener doc:name="Listener" doc:id="1201dffa-27cd-4fd5-b68a-69c8b29f6f63" config-ref="HTTPListenerConfig" path="/validate8">
+			<http:error-response statusCode="#[vars.httpStatus]" >
+				<http:body ><![CDATA[#[payload]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<validation:is-email doc:name="Is email" doc:id="c17ab1fb-d569-4dcb-b7f8-7ce96206f1a5" email="#[payload.contact.email]" config-ref="validationConfig"/>
+		<logger level="INFO" doc:name="Logger" doc:id="3f0bb6ad-22f2-4e17-b011-0699fd8f2c28" message="It is valid request."/>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="d0cca7e2-8d4d-49b2-afed-d787247e808f" type="VALIDATION:INVALID_EMAIL">
+				<ee:transform doc:name="Transform Message" doc:id="e9207127-0122-4c80-8b08-2b26964821f2">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	error: error.description,
+	"type": error.errorType
+}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus"><![CDATA[400]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		
+
+</error-handler>
+	</flow>
+	<flow name="validation-ip" doc:id="94e5582e-7f81-4c01-88e8-9a2a5ed4243f" >
+		<http:listener doc:name="Listener" doc:id="526cecb7-2b53-40d6-b270-7ca847362de0" config-ref="HTTPListenerConfig" path="/validate10">
+			<http:error-response statusCode="#[vars.httpStatus]" >
+				<http:body ><![CDATA[#[payload]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<validation:is-ip doc:name="Is IP" doc:id="9f3f8575-332e-4abb-aa46-7ff73e822b0b" config-ref="validationConfig" ip="#[attributes.headers['X-IP-ADDRESS']]"/>
+		<logger level="INFO" doc:name="Logger" doc:id="62282801-eafe-40f7-85a7-6e1c0074d795" message="It is valid request. IP is #[attributes.headers['X-IP-ADDRESS']]"/>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="4d51e1c8-f3cf-4f8d-8cd5-4c013ec5dba9" type="VALIDATION:INVALID_IP">
+				<ee:transform doc:name="Transform Message" doc:id="b9988ce6-860f-4f32-b11f-92956be9e1bf">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	error: error.description,
+	"type": error.errorType
+}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus"><![CDATA[400]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="a2fc76fc-6320-433f-a13f-03f4582cfb42" type="ANY">
+				<ee:transform doc:name="Transform Message" doc:id="8fa5e4cc-bb7b-40eb-b493-e16fc65db9d8" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	error: error.description,
+	"type": error.errorType
+}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="httpStatus" ><![CDATA[500]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		
+
+
+</error-handler>
+	</flow>
+<flow name="validation-size" doc:id="d07883d1-e802-4248-b5b5-0d92f3aff4a3" >
+		<http:listener doc:name="Listener" doc:id="18505094-bb6e-44cd-8930-8e638b8262f1" config-ref="HTTPListenerConfig" path="/validate12">
+			<http:error-response statusCode="#[vars.httpStatus]" >
+				<http:body ><![CDATA[#[payload]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<validation:validate-size doc:name="Validate size" doc:id="3cc671c9-17ce-4029-844c-081d630304f0" config-ref="validationConfig" value="#[payload.shipping]" min="4" max="5"/>
+		<logger level="INFO" doc:name="Logger" doc:id="cf6f6aa3-4102-4859-99f3-816163d901db" message="It is valid request."/>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="586ba51c-d5d9-4fad-a3fc-5bea5b4b7efa" type="VALIDATION:INVALID_SIZE">
+				<ee:transform doc:name="Transform Message" doc:id="2d7c487d-01c4-44b2-981e-dc2c660a2863">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	error: error.description,
+	"type": error.errorType
+}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus"><![CDATA[400]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		
+
+</error-handler>
+	</flow>
+<flow name="validation-any" doc:id="9329db4b-cd83-49d3-a073-af7b16aec006" >
+		<http:listener doc:name="Listener" doc:id="55bc3db3-2e80-460c-9643-d44f2486412f" config-ref="HTTPListenerConfig" path="/validate14">
+			<http:error-response statusCode="#[vars.httpStatus]" >
+				<http:body ><![CDATA[#[payload]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<validation:any doc:name="Any" doc:id="cf874d2d-e5f4-4341-a4c1-df70c7a6c004" >
+			<validation:is-number doc:name="Is number" doc:id="24000240-0d1c-444c-b712-b7c642988417" config-ref="validationConfig" value="#[payload.price]" numberType="DOUBLE"/>
+			<validation:validate-size doc:name="Validate size" doc:id="6f72719f-9ea4-4f29-92e1-fcb373492743" config-ref="validationConfig" value="#[payload.price]" min="2" max="5"/>
+		</validation:any>
+		<logger level="INFO" doc:name="Logger" doc:id="db2a6360-507e-499f-aef4-699e71422eb1" message="It is valid request. "/>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="9650b2f3-f8e8-4cdf-a98f-de9e4af2e48d" type="VALIDATION:MULTIPLE">
+				<ee:transform doc:name="Transform Message" doc:id="87f072f5-8672-4a71-a2f5-5de06b4b5680">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	error: error.description,
+	"type": error.errorType
+}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus"><![CDATA[400]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="070e240e-5daa-4998-97a7-c230fd3145fa" type="ANY">
+				<ee:transform doc:name="Transform Message" doc:id="8fd82ae6-2ac0-4f36-81b4-e2cc647663c1" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	error: error.description,
+	"type": error.errorType
+}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="httpStatus" ><![CDATA[500]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		
+
+
+</error-handler>
+	</flow>
+<flow name="validation-all" doc:id="e9181563-f059-49ae-99f3-7105adb8365a" >
+		<http:listener doc:name="Listener" doc:id="9a951385-8fb4-4214-9a5c-88d590812892" config-ref="HTTPListenerConfig" path="/validate16">
+			<http:error-response statusCode="#[vars.httpStatus]" >
+				<http:body ><![CDATA[#[payload]]]></http:body>
+			</http:error-response>
+		</http:listener>
+		<validation:all doc:name="All" doc:id="6a9cec26-9fe9-43c9-ab8c-1898b3fe079d" >
+			<validation:is-number doc:name="Is number" doc:id="7eaea6ab-a320-46f2-b4be-954f62716733" config-ref="validationConfig" value="#[payload.price]" numberType="DOUBLE" />
+			<validation:validate-size doc:name="Validate size" doc:id="5260b330-619e-4aab-b9ea-19ea2543497a" config-ref="validationConfig" value="#[payload.price]" min="2" max="5" />
+		</validation:all>
+		<logger level="INFO" doc:name="Logger" doc:id="a6cd0c1f-c329-44a2-a659-3db062a74392" message="It is valid request. "/>
+		<error-handler >
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="e095a835-801d-4454-bd9e-b3445ba626da" type="VALIDATION:MULTIPLE">
+				<ee:transform doc:name="Transform Message" doc:id="5a19acfa-2b2f-4e6f-a630-6752dcbff02e">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	error: error.description,
+	"type": error.errorType
+}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables>
+						<ee:set-variable variableName="httpStatus"><![CDATA[400]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+			<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="f24c0b32-9dad-419d-9c2e-4cf4529bfdf8" type="ANY">
+				<ee:transform doc:name="Transform Message" doc:id="d82d5cb8-4b91-4f9b-98c3-c73bede2eb2a" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	error: error.description,
+	"type": error.errorType
+}]]></ee:set-payload>
+					</ee:message>
+					<ee:variables >
+						<ee:set-variable variableName="httpStatus" ><![CDATA[500]]></ee:set-variable>
+					</ee:variables>
+				</ee:transform>
+			</on-error-propagate>
+		
+
+
+</error-handler>
+	</flow>
+</mule>
