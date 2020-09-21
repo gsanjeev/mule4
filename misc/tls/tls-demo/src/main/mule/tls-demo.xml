@@ -5,16 +5,54 @@
 	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
 http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
 http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd">
-	<http:listener-config name="HTTPListenerConfig" doc:name="HTTP Listener config" doc:id="5fe4c69b-0896-42b9-a60b-67504f0a40af" >
-		<http:listener-connection host="0.0.0.0" port="${api.port}" protocol="HTTPS">
+	<http:listener-config name="HTTPSListenerConfig" doc:name="HTTP Listener config" doc:id="5fe4c69b-0896-42b9-a60b-67504f0a40af" >
+		<http:listener-connection host="0.0.0.0" port="${api.port_to_test_2wayssl}" protocol="HTTPS">
 			<tls:context >
 				<tls:key-store type="jks" path="tls-demo-keystore.jks" keyPassword="mulesoft" password="mulesoft" />
 			</tls:context>
 		</http:listener-connection>
 	</http:listener-config>
 	<configuration-properties doc:name="Configuration properties" doc:id="a7bfe1ee-a241-49ac-9489-258790c87e73" file="app-config.yaml" />
-	<flow name="tls-enable" doc:id="b0f10190-0cee-46cc-b323-004ca08b0d40" >
-		<http:listener doc:name="Listener" doc:id="1d985968-af7a-4c92-a62f-f548adf0cdd8" config-ref="HTTPListenerConfig" path="/tls"/>
+	<http:listener-config name="HTTPListenerConfig" doc:name="HTTP Listener config" doc:id="f3891ee5-5cbd-47db-9583-cf1bd36b90a8" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="ad25c4b1-774c-400c-b60b-621b72497387" >
+		<http:request-connection protocol="HTTPS" host="localhost" port="${api.port_to_test_2wayssl}" >
+			<tls:context >
+				<tls:trust-store path="tls-demo-truststore.jks" password="mulesoft" type="jks" />
+			</tls:context>
+		</http:request-connection>
+	</http:request-config>
+	<http:listener-config name="HTTPS2WayListenerConfig" doc:name="HTTP Listener config" doc:id="cafa743b-49c8-4192-a674-b3cc8cca319f" >
+		<http:listener-connection protocol="HTTPS" host="0.0.0.0" port="${api.port}" >
+			<tls:context >
+				<tls:trust-store path="tls-demo-server-truststore.jks" password="mulesoft" type="jks" />
+				<tls:key-store type="jks" path="tls-demo-keystore.jks" keyPassword="mulesoft" password="mulesoft" />
+			</tls:context>
+		</http:listener-connection>
+	</http:listener-config>
+	<http:request-config name="HTTPS2WayRequestConfiguration" doc:name="HTTP Request configuration" doc:id="69bdd7ad-4058-41a2-b4ee-837e1e564a62" >
+		<http:request-connection protocol="HTTPS" host="localhost" port="8082" >
+			<tls:context >
+				<tls:trust-store path="tls-demo-truststore.jks" password="mulesoft" type="jks" />
+				<tls:key-store type="jks" path="tls-demo-client-keystore.jks" keyPassword="mulesoft" password="mulesoft" />
+			</tls:context>
+		</http:request-connection>
+	</http:request-config>
+	<flow name="tls-enable-server" doc:id="b0f10190-0cee-46cc-b323-004ca08b0d40" initialState="started">
+		<http:listener doc:name="Listener" doc:id="1d985968-af7a-4c92-a62f-f548adf0cdd8" config-ref="HTTPSListenerConfig" path="/tls"/>
 		<set-payload value='#[output application/json --- { message: "tls/ https demo"}]' doc:name="Set Payload" doc:id="c7892367-b8d1-4544-8d71-9acb681e2570" />
+	</flow>
+	<flow name="tls-client" doc:id="502498a8-716c-4fce-82db-c8b6d03e2dce" >
+		<http:listener doc:name="Listener" doc:id="505a86db-46d5-4d7b-8572-d0abefdc0323" config-ref="HTTPListenerConfig" path="/tlsClient"/>
+		<http:request method="GET" doc:name="Request" doc:id="a79563c4-3a47-4ad7-89d5-6ef8da85ffe5" config-ref="HTTP_Request_configuration" path="/tls"/>
+	</flow>
+	<flow name="tls-2way-ssl" doc:id="658a1f79-59ec-4f9e-90e1-0ea36abbb16d" >
+		<http:listener doc:name="Listener" doc:id="fa2834af-cac7-4634-9591-fd1d3d2ab6d9" config-ref="HTTPS2WayListenerConfig" path="/tls2way"/>
+		<set-payload value='#[output application/json --- { message: "tls/ https 2 way ssl demo"}]' doc:name="Set Payload" doc:id="f4a142b8-589d-4ddd-babd-645ff58c773c" />
+	</flow>
+	<flow name="tls-2way-ssl-client" doc:id="d3d94112-562c-403a-9537-58b178421f84" >
+		<http:listener doc:name="Listener" doc:id="309da791-40c5-4cc2-be87-98949c83bcf1" config-ref="HTTPListenerConfig" path="/tls2wayClient"/>
+		<http:request method="GET" doc:name="Request" doc:id="a9925704-2861-4cbb-9e08-b3366f073be9" config-ref="HTTPS2WayRequestConfiguration" path="/tls2way"/>
 	</flow>
 </mule>
