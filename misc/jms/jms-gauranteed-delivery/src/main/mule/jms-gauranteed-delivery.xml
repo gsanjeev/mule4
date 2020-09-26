@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:jms="http://www.mulesoft.org/schema/mule/jms"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+	<http:listener-config name="httpListenerConfig" doc:name="HTTP Listener config" doc:id="9cb25cd2-9bec-42b4-844e-b26848088fa6" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<jms:config name="jmsConfig" doc:name="JMS Config" doc:id="b9278365-21ad-4930-bb7c-f2218be718b2" >
+		<jms:active-mq-connection username="admin" password="admin" >
+			<jms:factory-configuration brokerUrl="tcp://localhost:61616" />
+		</jms:active-mq-connection>
+	</jms:config>
+	<file:config name="File_Config" doc:name="File Config" doc:id="b127395d-3e22-41ee-8e1a-a98d051872c6" >
+		<file:connection workingDir="F:\\tmp\\mule\\file-connector\\jms\\" />
+	</file:config>
+	<http:request-config name="httpRequestConfiguration" doc:name="HTTP Request configuration" doc:id="0d19c03b-a070-4e35-bdbc-a6ee4009098d" >
+		<http:request-connection host="localhost" port="8081" />
+	</http:request-config>
+	<flow name="send-message" doc:id="306f3bea-09f7-42bf-b14f-a245cf291109" >
+		<http:listener doc:name="Listener" doc:id="a7c72887-10c5-45da-882e-5830105a6949" config-ref="httpListenerConfig" path="/gauranteed" allowedMethods="POST"/>
+		<jms:publish doc:name="Publish" doc:id="c1fefdd8-04b1-4b29-a620-f1057ad8cac8" config-ref="jmsConfig" destination="test_q" persistentDelivery="true" timeToLive="1" timeToLiveUnit="DAYS">
+			<jms:message outboundContentType="application/json" />
+		</jms:publish>
+	</flow>
+	<flow name="process-message-detail" doc:id="7d8115ee-cbdc-4cf4-a091-7f518b972125" >
+		<http:listener doc:name="Listener" doc:id="a5ebb477-57c2-40ca-90ba-e618ef91d04e" config-ref="httpListenerConfig" path="/file" allowedMethods="POST"/>
+		<set-variable value='#[now() as String{format: "yyyyMMddHHmmSS"}]' doc:name="fileName" doc:id="9471fb20-d9fd-43ab-a420-a308d2a592e8" variableName="fileName"/>
+		<file:write doc:name="Write" doc:id="f40c5fbf-63b8-4dfd-bc3a-066f3d17c508" config-ref="File_Config" path="#['output\\' ++  vars.fileName]"/>
+	</flow>
+	<flow name="process-message" doc:id="723e316f-ed1f-40fa-b9c2-54a8350efc6e" >
+		<jms:listener doc:name="On New Message" doc:id="57532c9f-1693-4d32-acfc-49ab67613d53" config-ref="jmsConfig" destination="test_q" inboundContentType="application/json">
+			<jms:consumer-type >
+				<jms:queue-consumer />
+			</jms:consumer-type>
+			<jms:response persistentDelivery="true" timeToLive="1" timeToLiveUnit="DAYS" />
+		</jms:listener>
+		<logger level="INFO" doc:name="Logger" doc:id="80a0e263-ab56-4245-be6d-ef6739f20754" message="#[payload]"/>
+		<http:request method="POST" doc:name="Request" doc:id="1b56f800-7fc5-451b-94eb-674f8b968c6b" config-ref="httpRequestConfiguration" path="/file1"/>
+	</flow>
+	<flow name="reprocess-message" doc:id="82563c72-a74e-46d8-bd16-fd8020c0e381" >
+		<http:listener doc:name="Listener" doc:id="1e28c487-de69-4764-ba98-731c5fe46fbc" config-ref="httpListenerConfig" path="/reprocess"/>
+		<jms:consume doc:name="Consume" doc:id="98e6a172-d9de-4f99-973a-0378a6f801b3" config-ref="jmsConfig" destination="ActiveMQ.DLQ" contentType="application/json">
+			<jms:consumer-type >
+				<jms:queue-consumer />
+			</jms:consumer-type>
+		</jms:consume>
+		<http:request method="POST" doc:name="Request" doc:id="b2433363-90d8-4fb7-a22c-a955f63b9b80" config-ref="httpRequestConfiguration" path="/file" />
+	</flow>
+</mule>

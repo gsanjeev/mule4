@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:jms="http://www.mulesoft.org/schema/mule/jms"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/os http://www.mulesoft.org/schema/mule/os/current/mule-os.xsd">
+	<http:listener-config name="httpListenerConfig" doc:name="HTTP Listener config" doc:id="4f76312e-cd19-4d90-8477-b12d0266936d" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<jms:config name="jmsConfig" doc:name="JMS Config" doc:id="7591f3f6-de15-497b-a422-619ada217fcd" >
+		<jms:active-mq-connection username="admin" password="admin" >
+			<jms:factory-configuration brokerUrl="tcp://localhost:61616" />
+		</jms:active-mq-connection>
+	</jms:config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="859fe77c-ced9-4ebe-af1e-2b1a8653976e" >
+		<http:request-connection host="localhost" port="8081" />
+	</http:request-config>
+	<os:object-store name="objectStore" doc:name="Object store" doc:id="2f35ee3b-a200-4adc-82a7-6ce970b71ffa" maxEntries="100" entryTtl="1" entryTtlUnit="DAYS" />
+	<flow name="publish-message" doc:id="0dccb05f-6dfa-49be-9707-fc060e2c1286" >
+		<http:listener doc:name="Listener" doc:id="18652dd7-aae4-476e-ae46-016781232b67" config-ref="httpListenerConfig" path="/os"/>
+		<jms:publish doc:name="Publish" doc:id="53a678cf-1ada-40da-9117-1e139ddf46a7" config-ref="jmsConfig" destination="test_q">
+			<jms:message outboundContentType="application/json" />
+		</jms:publish>
+	</flow>
+	<flow name="process-message-detail" doc:id="8f3367d6-8d67-482c-8e49-05e78d7b45b8" >
+		<http:listener doc:name="Listener" doc:id="4872b157-1dcb-434e-a925-bd9a3eafb7a8" config-ref="httpListenerConfig" path="/process"/>
+		<logger level="INFO" doc:name="Logger" doc:id="b7391e51-31ff-4e08-8df9-30bcf8fcd62d" message="#[payload]"/>
+	</flow>
+	<flow name="process-message" doc:id="1ad115f8-e4aa-4a5b-b196-54d56fcd7984" >
+		<jms:listener doc:name="On New Message" doc:id="eff5fd67-ac7e-4dd6-91a1-a9454adcc0fc" config-ref="jmsConfig" destination="test_q" inboundContentType="application/json">
+			<jms:consumer-type >
+				<jms:queue-consumer />
+			</jms:consumer-type>
+		</jms:listener>
+		<try doc:name="Try" doc:id="174d37cb-046a-4dc9-994f-9c02a9f6c454" >
+			<http:request method="POST" doc:name="Request" doc:id="ff17ce03-e5ea-4466-b11e-3d5d0892df78" config-ref="HTTP_Request_configuration" path="/process1" />
+			<error-handler >
+				<on-error-propagate enableNotifications="true" logException="true" doc:name="On Error Propagate" doc:id="c98bd2a8-cedd-472b-ae32-d46ce7a9646e" type="ANY">
+					<os:store doc:name="Store" doc:id="b966bb3d-dbe3-4f6d-bf10-531a60b0c0df" key='#[now() as String{format:"yyyyMMddhhmmss"}]' objectStore="objectStore"/>
+				</on-error-propagate>
+			</error-handler>
+		</try>
+	</flow>
+	<flow name="jms-gauranteed-delivery-using-osFlow" doc:id="43badc9d-7bce-4d56-a529-43bac6fd2338" >
+		<http:listener doc:name="Listener" doc:id="5fd27b2b-b331-4894-b0c8-428a0e153084" config-ref="httpListenerConfig" path="/reprocess"/>
+		<os:retrieve-all-keys doc:name="Retrieve all keys" doc:id="d8c74c2b-c801-4960-b449-f7c11bd30b8a" objectStore="objectStore"/>
+		<foreach doc:name="For Each" doc:id="bb525926-ec07-44e7-9f14-5f3cdedf4eea">
+						<set-variable value="#[payload]" doc:name="messageKey" doc:id="5f86f584-4d75-473a-b016-e8459dfac17e" variableName="messageKey" />
+			<os:retrieve doc:name="Retrieve" doc:id="4e8ba39c-a82b-41fb-b597-165ea4894c14" key="#[vars.messageKey]" objectStore="objectStore" />
+			<logger level="INFO" doc:name="Logger" doc:id="e677a339-22fb-46dc-a0d6-c790203ab090" message="#[payload]" />
+			<os:remove doc:name="Remove" doc:id="e87ee5ea-2dce-4a07-b084-70558af3759c" key="#[vars.messageKey]" objectStore="objectStore"/>
+					</foreach>
+		<logger level="INFO" doc:name="Logger" doc:id="ab5598c4-031a-4969-9dc5-bc65f8e5c621" message='All saved messages processed. Messaged key: '/>
+	</flow>
+</mule>

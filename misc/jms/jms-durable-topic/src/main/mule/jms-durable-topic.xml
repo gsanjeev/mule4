@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd">
+	<jms:config name="jmsConfig" doc:name="JMS Config" doc:id="287a745c-4d70-4e6b-bed0-651d62fa0664" >
+		<jms:active-mq-connection username="admin" password="admin" clientId="MuleClient2">
+			<jms:factory-configuration brokerUrl="tcp://localhost:61616" />
+		</jms:active-mq-connection>
+	</jms:config>
+	<flow name="jms-durable-topicFlow" doc:id="6376a679-1409-4bec-8cf6-02ab40bcc955" >
+		<jms:listener doc:name="On New Message" doc:id="db4e07d2-b017-46f2-9154-55edc6af3856" destination="test_t" inboundContentType="application/json" numberOfConsumers="1" config-ref="jmsConfig" ackMode="AUTO">
+			<jms:consumer-type >
+				<jms:topic-consumer durable="true" subscriptionName="MuleSubscriber" />
+			</jms:consumer-type>
+		</jms:listener>
+		<logger level="INFO" doc:name="Logger" doc:id="dafc5094-8f43-44e3-a0e6-f595de091e22" message="#[payload]"/>
+	</flow>
+</mule>

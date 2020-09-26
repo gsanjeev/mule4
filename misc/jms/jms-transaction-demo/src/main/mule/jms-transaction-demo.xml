@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd">
+	<http:listener-config name="httpListenerConfig" doc:name="HTTP Listener config" doc:id="2c7e522a-e9e1-4fb5-a63b-af9cd4a5d432" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<jms:config name="jmsConfig1" doc:name="JMS Config" doc:id="51d1e54e-6fc4-44c9-a47d-48c671348dd7" >
+		<jms:active-mq-connection username="admin" password="admin" >
+			<jms:factory-configuration brokerUrl="tcp://localhost:61617" />
+		</jms:active-mq-connection>
+	</jms:config>
+	<jms:config name="jmsConfig" doc:name="JMS Config" doc:id="2c85ff95-ca6a-4048-b8e2-54f9c250f786" >
+		<jms:active-mq-connection username="admin" password="admin" >
+			<jms:factory-configuration brokerUrl="tcp://localhost:61616" />
+		</jms:active-mq-connection>
+	</jms:config>
+	<flow name="jms-transaction-demoFlow" doc:id="5496d846-a0d1-4041-b37c-87409326dcd4" >
+		<http:listener doc:name="Listener" doc:id="1904e440-9b66-4c61-8304-8ad7013f052c" config-ref="httpListenerConfig" path="/transaction"/>
+		<try doc:name="Try" doc:id="64a5b917-c08a-4edb-875e-d976e8f53407" transactionalAction="ALWAYS_BEGIN">
+			<jms:publish doc:name="Publish to test_q" doc:id="f4ac95f7-85e1-4153-b198-c4a1602512d8" config-ref="jmsConfig" destination="test_q">
+			<jms:message outboundContentType="application/json" />
+		</jms:publish>
+			<jms:publish doc:name="Publish to test_q1" doc:id="9b734be9-620a-4f8b-9387-30931976938a" config-ref="jmsConfig1" destination="test_second_q">
+			<jms:message outboundContentType="application/json" />
+		</jms:publish>
+		</try>
+		<logger level="INFO" doc:name="Logger" doc:id="4605c220-0b2b-4f92-b07d-5226ce20d9b4" message="Processing completed."/>
+	</flow>
+</mule>

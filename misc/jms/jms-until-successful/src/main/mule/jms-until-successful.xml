@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:jms="http://www.mulesoft.org/schema/mule/jms" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd">
+	<http:listener-config name="httpListenerConfig" doc:name="HTTP Listener config" doc:id="f035f17c-3d64-496f-b9e6-8fe68bf51d6a" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<jms:config name="jmsConfig" doc:name="JMS Config" doc:id="94170b50-3ed4-4da8-b622-0efb04c9699b" >
+		<jms:active-mq-connection username="admin" password="admin" >
+			<jms:factory-configuration brokerUrl="tcp://localhost:61616" />
+		</jms:active-mq-connection>
+	</jms:config>
+	<flow name="jms-until-successfulFlow" doc:id="f38ed8ee-f305-4470-8050-a8718672fb5a" >
+		<http:listener doc:name="Listener" doc:id="74b54be2-9fcc-4163-8303-44206025e040" config-ref="httpListenerConfig" path="/until"/>
+		<until-successful maxRetries="5" doc:name="Until Successful" doc:id="dd5c82ce-95f2-49eb-826c-873c97f28ab6" millisBetweenRetries="10000">
+			<jms:publish doc:name="Publish" doc:id="ed42a674-aa90-4bb4-8e54-eedd0b431a00" config-ref="jmsConfig" destination="test_q">
+			<jms:message outboundContentType="application/json" />
+		</jms:publish>
+		</until-successful>
+	</flow>
+</mule>

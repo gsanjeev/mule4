@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:jms="http://www.mulesoft.org/schema/mule/jms"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="httpListenerConfig" doc:name="HTTP Listener config" doc:id="6a33e029-c39a-4568-8556-bbe786b066f3" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<jms:config name="jmsConfig" doc:name="JMS Config" doc:id="a0d657c4-04d6-4b78-87b1-2c3d381fb355" >
+		<jms:active-mq-connection username="admin" password="amdin" >
+			<jms:factory-configuration brokerUrl="tcp://localhost:61616" />
+		</jms:active-mq-connection>
+	</jms:config>
+	<flow name="publish-to-queue" doc:id="19978d61-ea6a-4076-9606-6206d50ad2a1" >
+		<http:listener doc:name="Listener" doc:id="0eb0b152-0784-42d6-8eef-6c0fc31a8d18" config-ref="httpListenerConfig" path="/jms" allowedMethods="POST"/>
+		<jms:publish doc:name="Publish" doc:id="aa3f4e28-53c4-4823-bd34-29045f536594" config-ref="jmsConfig" destination="test_q1">
+			<jms:message outboundContentType="application/json" />
+		</jms:publish>
+	</flow>
+	<flow name="queue-message-consumer" doc:id="6c16efff-6b69-43ca-8017-3baff8ae10be" >
+		<jms:listener doc:name="On New Message" doc:id="bca110b1-cd79-4e49-9008-93edd878f6f3" config-ref="jmsConfig" destination="test_q" inboundContentType="application/json">
+			<jms:consumer-type >
+				<jms:queue-consumer />
+			</jms:consumer-type>
+		</jms:listener>
+		<logger level="INFO" doc:name="Logger" doc:id="ecad6a24-8787-4b29-8ca6-5258597025b8" message="#[payload]"/>
+	</flow>
+	<flow name="publish-to-topic" doc:id="5221aa88-81c9-4d54-9de6-2d135b78a645" >
+		<http:listener doc:name="Listener" doc:id="9b5040a1-dcf0-4ba8-b393-cdbf489cb02d" config-ref="httpListenerConfig" allowedMethods="POST" path="/pulishToTopic"/>
+		<jms:publish doc:name="Publish" doc:id="9282d813-8ce4-4071-b2f2-6a243a0cc8fb" config-ref="jmsConfig" destination="test_t" destinationType="TOPIC">
+			<jms:message outboundContentType="application/json" />
+		</jms:publish>
+	</flow>
+	<flow name="topic-message-consumer1" doc:id="ef8265a1-b47e-4a3b-bd1b-ced931625921" >
+		<jms:listener doc:name="On New Message" doc:id="db250399-965e-4033-937d-0d120218ecf9" config-ref="jmsConfig" destination="test_t" inboundContentType="application/json" numberOfConsumers="1">
+			<jms:consumer-type >
+				<jms:topic-consumer />
+			</jms:consumer-type>
+		</jms:listener>
+		<logger level="INFO" doc:name="Logger" doc:id="019284f0-7e5c-4784-90ce-4b165cdaced3" message="Consumer1   #[payload]"/>
+	</flow>
+	<flow name="topic-message-consumer2" doc:id="b0cac078-efd7-461b-94ca-951cd885b8d3" >
+		<jms:listener doc:name="On New Message" doc:id="ef968bcc-f6da-4099-ad3f-4924c7bef747" config-ref="jmsConfig" destination="test_t" inboundContentType="application/json" numberOfConsumers="1">
+			<jms:consumer-type >
+				<jms:topic-consumer />
+			</jms:consumer-type>
+		</jms:listener>
+		<set-variable value="#[payload]" doc:name="Set Variable" doc:id="9198d8b7-b64b-47e0-bb2a-ee743bc623f4" variableName="message1" />
+		<logger level="INFO" doc:name="Logger" doc:id="ed34371d-f1b4-4fb8-b654-ebe8241b6838" message="#['Consumer1' ++ write(payload,'application/java')]"/>
+	</flow>
+	<flow name="message-consume-need-trigger-event" doc:id="8da49a4f-9ed5-4dde-9fd5-9289e86b7955" >
+		<http:listener doc:name="Listener" doc:id="366ec99d-f2f1-4684-bf77-6390dab40592" config-ref="httpListenerConfig" path="/jms" allowedMethods="GET"/>
+		<jms:consume doc:name="Consume" doc:id="71892579-0b02-48a4-834f-320b3d8e5119" config-ref="jmsConfig" destination="test_q1" contentType="application/json"/>
+	</flow>
+</mule>

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:jms="http://www.mulesoft.org/schema/mule/jms"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/jms http://www.mulesoft.org/schema/mule/jms/current/mule-jms.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<http:listener-config name="httpListenerConfig" doc:name="HTTP Listener config" doc:id="9a7d223b-7fa1-4e53-9304-e4ec4e9ac89a" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<jms:config name="jmsConfig" doc:name="JMS Config" doc:id="9bd49f3b-e41b-4ae6-bf57-2d8cf30b8e2e" >
+		<jms:active-mq-connection username="admin" password="admin" >
+			<jms:factory-configuration brokerUrl="tcp://localhost:61616" />
+		</jms:active-mq-connection>
+	</jms:config>
+	<flow name="publish-message-get-reply" doc:id="04fe75b2-652b-4b1e-98c0-ef714c38f26f" >
+		<http:listener doc:name="Listener" doc:id="f1a42671-76d4-442c-bfc4-16607d28eb06" config-ref="httpListenerConfig" path="/requestReply"/>
+		<jms:publish-consume doc:name="Publish consume" doc:id="d01ccc16-b9cc-4027-86d5-bf99dba1be54" config-ref="jmsConfig" destination="test_q">
+			<jms:message outboundContentType="application/json" >
+				<jms:reply-to destination="test_reply_q" />
+			</jms:message>
+			<jms:consume-configuration maximumWait="1" maximumWaitUnit="MINUTES" />
+		</jms:publish-consume>
+		<logger level="INFO" doc:name="Logger" doc:id="1b7ef9b5-63a0-4b31-bd2a-ffb6e4608784" message="message response from #[attributes.headers.correlationId]"/>
+	</flow>
+	<flow name="consume-message-and-reply" doc:id="d2a6ef2e-4797-412e-b637-22e9f3370a6d" >
+		<jms:listener doc:name="On New Message" doc:id="9c9425d2-0822-4592-bd5b-22308fb4efad" config-ref="jmsConfig" destination="test_q" inboundContentType="application/json">
+			<jms:consumer-type >
+				<jms:queue-consumer />
+			</jms:consumer-type>
+		</jms:listener>
+		<logger level="INFO" doc:name="Logger" doc:id="a76aeeb1-a9d8-40f0-b394-b0ed91302bb4" message="Request from message #[attributes.headers.correlationId]"/>
+	</flow>
+</mule>
