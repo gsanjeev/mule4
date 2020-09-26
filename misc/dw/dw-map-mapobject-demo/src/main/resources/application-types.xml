@@ -1,0 +1,48 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="orderJsonType" format="json">
+      <types:shape format="weave" example="examples/order.json"><![CDATA[%dw 2.0
+
+type orderJsonType = Array<{|  shipping: String,   desc: String,   price: String,   quantity: String|}> {"example": "[{\\\"shipping\\\":\\\"6788\\\",\\\"desc\\\":\\\"item1\\\",\\\"price\\\":\\\"a8.00\\\",\\\"quantity\\\":\\\"6\\\"},{\\\"shipping\\\":\\\"6788\\\",\\\"desc\\\":\\\"item1\\\",\\\"price\\\":\\\"a8.00\\\",\\\"quantity\\\":\\\"6\\\"}]"}
+
+]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#69290647-2cba-4a22-8863-2187e5ce4fcf">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="orderJsonType"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#0ec0fd78-f0d7-4e31-9174-3b642f94b096">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="orderJsonType"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#83a10697-ec55-43c7-904e-6333611a3a37">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="orderJsonType"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#eedd5399-0fd5-44d7-981c-a08a0c2f5c4e">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="orderJsonType"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>

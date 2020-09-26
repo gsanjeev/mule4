@@ -1,0 +1,44 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="catalogXMLType" format="xml">
+      <types:example format="xml" element="catalog" location="examples/catalog.xml"/>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#d5345cf9-4e88-40c4-affe-efe46eea56ce">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="catalogXMLType"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#347fbf62-aac9-4687-841e-4eb4b3fc74f7">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="catalogXMLType"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#04b0b7d0-d2d0-456b-b78e-a9010226d779">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="catalogXMLType"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+  <types:enrichment select="#488c618d-8d95-49ab-95d1-ea13031af6e0">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="catalogXMLType"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>

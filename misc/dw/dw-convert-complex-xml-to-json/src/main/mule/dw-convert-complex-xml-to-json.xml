@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="dw-convert-complex-xml-to-jsonFlow" doc:id="e006517b-f31a-4796-89ad-6aecd92a2b32" >
+		<ee:transform doc:name="Transform Message" doc:id="d5345cf9-4e88-40c4-affe-efe46eea56ce" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	catalog: {
+		product: {
+			description: payload.catalog.product.@description,
+			product_image: payload.catalog.product.@product_image,
+			catalog_item: payload.catalog.product.*catalog_item map (i, i_idx) -> {
+				gender: i.@gender,
+				item_number:i.item_number,
+				price:i.price,
+				size: i.*size map(s, s_idx) -> {
+					description: s.@description,
+					color_swatch: s.*color_swatch map (c, c_idx) -> {
+						color: c,
+						color_image: c.@image
+					}
+					
+				}
+		
+				
+			}
+			
+		}
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="covert-use-type" doc:id="63608393-8fa3-46ae-bc87-335d2eb48a3e" >
+		<ee:transform doc:name="Transform Message" doc:id="347fbf62-aac9-4687-841e-4eb4b3fc74f7" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	catalog: {
+		product: {
+			description: payload.catalog.product.@description,
+			product_image: payload.catalog.product.@product_image,
+			men_catalog_item: payload.catalog.product.*catalog_item filter $.@gender =='Men\'s' map  {
+				gender: $.@gender,
+				item_number:$.item_number,
+				price:$.price,
+				size: $.*size map(s, s_idx) -> {
+					description: s.@description,
+					color_swatch: s.*color_swatch map (c, c_idx) -> {
+						color: c,
+						color_image: c.@image
+					}					
+				}				
+			},
+			women_catalog_item: payload.catalog.product.*catalog_item filter $.@gender =='Women\'s' map  {
+				gender: $.@gender,
+				item_number:$.item_number,
+				price:$.price,
+				size: $.*size map(s, s_idx) -> {
+					description: s.@description,
+					color_swatch: s.*color_swatch map (c, c_idx) -> {
+						color: c,
+						color_image: c.@image
+					}					
+				}				
+			}		
+		}
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="convert-use-type-second-method" doc:id="d7bbf2cc-7cc9-449e-870e-6d05e54f8bc8" >
+		<ee:transform doc:name="Transform Message" doc:id="04b0b7d0-d2d0-456b-b78e-a9010226d779" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	catalog: {
+		product: {
+			description: payload.catalog.product.@description,
+			product_image: payload.catalog.product.@product_image,
+			men_catalog_item: payload.catalog.product.*catalog_item filter $.@gender == 'Men\'s' map (i, i_idx) -> {
+				gender: i.@gender,
+				item_number:i.item_number,
+				price:i.price,
+				size: i.*size map(s, s_idx) -> {
+					description: s.@description,
+					color_swatch: s.*color_swatch map (c, c_idx) -> {
+						color: c,
+						color_image: c.@image
+					}					
+				}			
+			},
+			women_catalog_item: payload.catalog.product.*catalog_item filter $.@gender == 'Women\'s' map (i, i_idx) -> {
+				gender: i.@gender,
+				item_number:i.item_number,
+				price:i.price,
+				size: i.*size map(s, s_idx) -> {
+					description: s.@description,
+					color_swatch: s.*color_swatch map (c, c_idx) -> {
+						color: c,
+						color_image: c.@image
+					}					
+				}			
+			}			
+		}
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="filtering-single-array-value-to-object" doc:id="83c437c3-157f-4653-8815-989d3902d584" >
+		<ee:transform doc:name="Transform Message" doc:id="488c618d-8d95-49ab-95d1-ea13031af6e0" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	catalog: {
+		product: {
+			description: payload.catalog.product.@description,
+			product_image: payload.catalog.product.@product_image,
+			men_catalog_item: (payload.catalog.product.*catalog_item filter $.@gender == 'Men\'s' map (i, i_idx) -> {
+				gender: i.@gender,
+				item_number:i.item_number,
+				price:i.price,
+				size: i.*size map(s, s_idx) -> {
+					description: s.@description,
+					color_swatch: s.*color_swatch map (c, c_idx) -> {
+						color: c,
+						color_image: c.@image
+					}					
+				}			
+			})[0],
+			women_catalog_item: (payload.catalog.product.*catalog_item filter $.@gender == 'Women\'s' map (i, i_idx) -> {
+				gender: i.@gender,
+				item_number:i.item_number,
+				price:i.price,
+				size: i.*size map(s, s_idx) -> {
+					description: s.@description,
+					color_swatch: s.*color_swatch map (c, c_idx) -> {
+						color: c,
+						color_image: c.@image
+					}					
+				}			
+			})[0]			
+		}
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

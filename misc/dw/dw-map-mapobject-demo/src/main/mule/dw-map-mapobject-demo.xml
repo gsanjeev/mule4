@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="convert-key-upper-item-0" doc:id="dc87f2a4-2f21-4865-bb15-98f8968de371" >
+		<ee:transform doc:name="Transform Message" doc:id="69290647-2cba-4a22-8863-2187e5ce4fcf" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload[0] mapObject(i_value, i_key, i_index) -> {
+	(upper(i_key)) : i_value
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="upper-update-value-item-0" doc:id="8c3569bc-8acf-4a73-b22a-0f7a856ac0ca" >
+		<ee:transform doc:name="Transform Message" doc:id="0ec0fd78-f0d7-4e31-9174-3b642f94b096" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload[0] mapObject(i_value, i_key, i_index) -> (
+	if (i_key as String == "price") {
+		(upper(i_key)) :  "\$" ++ i_value
+	}
+	else {
+	(upper(i_key)) : i_value
+	}
+)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="dw-add-new-field" doc:id="27f5fde1-bba3-4113-ab88-7a6321f17546" >
+		<ee:transform doc:name="Transform Message" doc:id="83a10697-ec55-43c7-904e-6333611a3a37" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload[0] mapObject(i_value, i_key, i_index) -> (
+	if (i_key as String == "price") {
+		(upper(i_key)) :  "\$" ++ i_value,
+		"CURRENCY": "US"
+	}
+	else {
+	(upper(i_key)) : i_value
+	}
+)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="dw-map-mapobject-together-use" doc:id="cdfb503f-b645-40ed-9d2e-9ba38115ad45" >
+		<ee:transform doc:name="Transform Message" doc:id="eedd5399-0fd5-44d7-981c-a08a0c2f5c4e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map (item, index) -> 
+
+item mapObject(i_value, i_key, i_index) -> (
+	if (i_key as String == "price") {
+		(upper(i_key)) :  "\$" ++ i_value,
+		"CURRENCY": "US"
+	}
+	else {
+	(upper(i_key)) : i_value
+	}
+)]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
