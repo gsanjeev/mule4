@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:sap="http://www.mulesoft.org/schema/mule/sap" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/sap http://www.mulesoft.org/schema/mule/sap/current/mule-sap.xsd">
+	<flow name="sap-application-config-demoFlow" doc:id="11d77411-b5ce-45b8-b5b2-8f6b3bff8e62" >
+		<sap:sync-rfc doc:name="Synchronous Remote Function Call" doc:id="9f35494e-f348-42a1-8f8e-7aa052fa4684" />
+	</flow>
+</mule>
