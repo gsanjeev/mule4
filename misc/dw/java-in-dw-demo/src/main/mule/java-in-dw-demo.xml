@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="hTTPListenerConfig" doc:name="HTTP Listener config" doc:id="582ef1b3-8274-4cf9-9708-f7f487590cb5" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="import-java" doc:id="57765de7-24ab-4836-a0e7-8cda31ea6f6b" >
+		<http:listener doc:name="Listener" doc:id="a0f8ff82-add2-4f18-a833-482f193964c9" config-ref="hTTPListenerConfig" path="/greet"/>
+		<ee:transform doc:name="Transform Message" doc:id="61032375-0047-448f-9c3f-037b0740fb6f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+import java!com::demo::Greeting
+output application/json
+---
+{
+	greeting: Greeting::greet("Sanjeev")
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="direct-call" doc:id="6baf971b-f62a-4335-868b-3baf32289b18" >
+		<http:listener doc:name="Listener" doc:id="e2461efb-ffe1-41bf-8f74-a9ce7a43b62e" config-ref="hTTPListenerConfig" path="/hello"/>
+		<ee:transform doc:name="Transform Message" doc:id="91d6f0a7-be3e-4624-bb8c-54cc2d57eceb" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	greeting: java!com::demo::Greeting::greet("Sanjeev")
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
