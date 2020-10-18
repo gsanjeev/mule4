@@ -10,14 +10,14 @@ http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/
 	</http:listener-config>
 	<flow name="dynamic-evaluate-demoFlow" doc:id="56a3018e-d767-4849-85b5-999a78c89d62" >
 		<http:listener doc:name="Listener" doc:id="4f02e21e-ed6a-469d-a90d-a3dbde8a0449" config-ref="HTTPListenerConfig" path="/d-evaluate"/>
-		<set-variable value="#[attributes.queryParams.customer]" doc:name="vCustomer" doc:id="743dfb8f-cf60-4c8a-81c0-f40158952747" variableName="vCustomer"/>
+		<set-variable value="#[attributes.queryParams.customer]" doc:name="customerName" doc:id="743dfb8f-cf60-4c8a-81c0-f40158952747" variableName="customerName"/>
 		<ee:transform doc:name="get vDWLFile" doc:id="c1067802-9951-48fc-ba81-fe1f7605f202" >
 			<ee:message >
 			</ee:message>
 			<ee:variables >
 				<ee:set-variable variableName="vDWLFile" ><![CDATA[%dw 2.0
 output application/java
-var filename = "dw/$(vars.vCustomer).dwl"
+var filename = "dw/$(vars.customerName).dwl"
 ---
 readUrl("classpath://" ++ filename, "text/plain")]]></ee:set-variable>
 			</ee:variables>
