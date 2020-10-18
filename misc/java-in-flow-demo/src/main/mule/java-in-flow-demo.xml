@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:java="http://www.mulesoft.org/schema/mule/java" xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/java/current/mule-java.xsd">
+	<http:listener-config name="hTTPListenerConfig" doc:name="HTTP Listener config" doc:id="734c04b1-987f-46ff-be5a-43cf2850978b" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="invoke-static" doc:id="241814c1-bf28-44dd-9f0d-efa368220567" >
+		<http:listener doc:name="Listener" doc:id="518622df-1bfc-4b3a-9628-2760d4afbc5a" config-ref="hTTPListenerConfig" path="/java"/>
+		<java:invoke-static method="greet(java.lang.String)" doc:name="Invoke static" doc:id="a16a0926-2542-4544-b1a5-cdb80f20e36e" class="com.demo.Demo">
+			<java:args ><![CDATA[#[{
+	name: attributes.queryParams.name
+}]]]></java:args>
+		</java:invoke-static>
+	</flow>
+	<flow name="invoke-instance-method" doc:id="481a6695-22e1-4df5-8828-93715b19cee0" >
+		<http:listener doc:name="Listener" doc:id="0befb7c3-f2f8-4a8b-9e6e-fd4515a54cd7" config-ref="hTTPListenerConfig" path="/fullname"/>
+		<java:new constructor="Demo()" doc:name="New" doc:id="f1b1e712-f7f7-42d0-87ab-526cce551b98" class="com.demo.Demo" target="demoObject"/>
+		<java:invoke doc:name="Invoke" doc:id="7d9a78e8-3eab-4d66-8288-596427d12368" instance="#[vars.demoObject]" class="com.demo.Demo" method="getFullName(java.lang.String,java.lang.String)">
+			<java:args ><![CDATA[#[{
+	fname: attributes.queryParams.fname,
+	lname: attributes.queryParams.lname
+}]]]></java:args>
+		</java:invoke>
+	</flow>
+</mule>
