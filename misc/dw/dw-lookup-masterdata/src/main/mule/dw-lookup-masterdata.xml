@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<http:listener-config name="hTTPListenerConfig" doc:name="HTTP Listener config" doc:id="ea6851d5-c242-4905-8a22-f9034570cfb4" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<configuration-properties doc:name="Configuration properties" doc:id="770daf1b-740f-43c4-9acf-4175a0f6d579" file="dev-account-type.properties" />
+	<flow name="file-masterdata" doc:id="1246f333-0262-4147-a775-796bf2e873a4" >
+		<http:listener doc:name="Listener" doc:id="ccb63e74-cce6-42d7-a76f-5e580b3e6ecd" config-ref="hTTPListenerConfig" path="/lookup" allowedMethods="POST"/>
+		<ee:transform doc:name="Transform Message" doc:id="a1c84ee0-1ba4-4ba4-87e1-aaf6ccb61a8b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+var accountTypes = readUrl("classpath://accountType.json", "application/json")
+output application/json
+---
+payload map (item, index) -> {
+	id: item.id,
+	name: item.name,	
+	typeName: accountTypes[item.'type' as String],
+	"type": item.'type'	
+}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="using-properties" doc:id="0db4654b-d9a3-417a-875b-77197be5ca74" >
+		<http:listener doc:name="Listener" doc:id="dbef7af6-d86b-4177-9ac6-0fc2cc1f99c6" config-ref="hTTPListenerConfig" path="/prop" allowedMethods="POST"/>
+		<ee:transform doc:name="Transform Message" doc:id="5f8d51cc-ad2b-4447-baf1-60eb8d993002" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload map (item, index) -> {
+	id: item.id,
+	name: item.name,	
+	typeName: p('account.type.' ++ item.'type' as String),
+	"type": item.'type'	
+}
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
