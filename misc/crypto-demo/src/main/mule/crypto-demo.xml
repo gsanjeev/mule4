@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<flow name="crypto-demoFlow" doc:id="30a6853d-359c-4bd6-bd82-f4bd3ef90824" >
+		<ee:transform doc:name="HMACBinary" doc:id="eb6d5de7-f799-4b37-b8ef-3c2c26db7751" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+import dw::Crypto
+output application/json
+---
+{
+	HMACBinar: Crypto::HMACBinary("thisisakey" as Binary, "Today is sunny." as Binary)
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="HMACWith" doc:id="a87ecb40-036d-4465-99c6-0ec0024666e4" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+import dw::Crypto
+output application/json
+---
+{
+	HMACWithHmacSHA256: Crypto::HMACWith("thisisakey" as Binary, "Today is sunny." as Binary, "HmacSHA256")
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="MD5 and SHA1" doc:id="eb547d07-d1a7-47f6-b2cd-bc6206add448" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+import dw::Crypto
+output application/json
+---
+{
+	MD5: Crypto::MD5("Today is sunny." as Binary),
+	SHA1: Crypto::SHA1("Today is sunny." as Binary),
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<ee:transform doc:name="hashWith" doc:id="2c61c562-872c-48d9-ba13-aba8a924f673" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+import dw::Crypto
+output application/json
+---
+{
+	hashWithMD2: Crypto::hashWith("Today is sunny." as Binary, "MD2"),
+	hashWithMD5: Crypto::hashWith("Today is sunny." as Binary, "MD5"),
+	hashWithSHA1: Crypto::hashWith("Today is sunny." as Binary, "SHA-1"),
+	hashWithSHA256: Crypto::hashWith("Today is sunny." as Binary, "SHA-256"),
+	hashWithSHA384: Crypto::hashWith("Today is sunny." as Binary, "SHA-384"),
+	hashWithSHA512: Crypto::hashWith("Today is sunny." as Binary, "SHA-512")
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
